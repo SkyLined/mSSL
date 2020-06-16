@@ -1,0 +1,9 @@
+Database
+OpenSSL
+\#*
+*.VC.db
+*.VC.opendb
+*.suo
+*.user
+*.filters
+*.pyc
