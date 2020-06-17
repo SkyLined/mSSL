@@ -3,12 +3,18 @@ binascii
 collections
 contextlib
 cStringIO
+ctypes
+dis
 gc
 heapq
+imp
+inspect
 itertools
 keyword
 msvcrt
 Queue
+opcode
+platform
 socket
 ssl
 string
@@ -19,3 +25,5 @@ textwrap
 thread
 threading
 time
+token
+tokenize
