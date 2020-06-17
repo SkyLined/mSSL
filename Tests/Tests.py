@@ -45,19 +45,23 @@ try:
   oConsole.fOutput("\xFE\xFE\xFE\xFE Resetting oCertificateAuthority... ", sPadding = "\xFE");
   oConsole.fOutput("  oCertificateAuthority = ", str(mSSL.oCertificateAuthority));
   mSSL.oCertificateAuthority.fReset();
-
+  
   oConsole.fOutput("\xFE\xFE\xFE\xFE Ask oCertificateAuthority to generate cSSLContext for hostname 'test-hostname'...", sPadding = "\xFE");
   oSSLContext = mSSL.oCertificateAuthority.foGenerateSSLContextForServerWithHostname("test-hostname");
   oConsole.fOutput("  oSSLContext = ", str(oSSLContext));
-
+  
   oConsole.fOutput("\xFE\xFE\xFE\xFE Generate cCertificateStore instance...", sPadding = "\xFE");
   oCertificateStore = mSSL.cCertificateStore();
-
+  
   oConsole.fOutput("\xFE\xFE\xFE\xFE Add oCertificateAuthority to oCertificateStore...", sPadding = "\xFE");
   oCertificateStore.fAddCertificateAuthority(mSSL.oCertificateAuthority);
-
+  
   oConsole.fOutput("\xFE\xFE\xFE\xFE Ask oCertificateStore for cSSLContext for hostname 'test-hostname'...", sPadding = "\xFE");
   oSSLContext = oCertificateStore.foGetSSLContextForServerWithHostname("test-hostname");
+  
+  oConsole.fOutput("\xFE\xFE\xFE\xFE Resetting oCertificateAuthority... ", sPadding = "\xFE");
+  mSSL.oCertificateAuthority.fReset();
+  
   oConsole.fPrint("+ Done.");
   
 except Exception as oException:
