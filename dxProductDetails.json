@@ -1,10 +1,12 @@
 {
   "asDependentOnProductNames": [
-    "mDebugOutput", 
     "mMultiThreading", 
-    "mWindowsSDK", 
-    "oConsole"
+    "mWindowsSDK"
   ], 
+  "asOptionalProductNames": [
+    "mDebugOutput",
+    "oConsole"
+  ],
   "oProductVersion": "2020-06-17 08:11", 
   "oRepository": {
     "sBranch": "master", 
@@ -12,8 +14,6 @@
     "sType": "GitHub", 
     "sUserName": "SkyLined"
   }, 
-  "oTrialPeriodDuration": null, 
-  "sLicenseServerURL": null, 
   "sProductAuthor": "SkyLined", 
   "sProductName": "mSSL", 
   "sProductURL": "https://github.com/SkyLined/mSSL"
