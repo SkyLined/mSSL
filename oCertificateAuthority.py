@@ -1,7 +1,16 @@
 import os, subprocess;
 
+try: # mDebugOutput use is Optional
+  from mDebugOutput import *;
+except: # Do nothing if not available.
+  ShowDebugOutput = lambda fxFunction: fxFunction;
+  fShowDebugOutput = lambda sMessage: None;
+  fEnableDebugOutputForModule = lambda mModule: None;
+  fEnableDebugOutputForClass = lambda cClass: None;
+  fEnableAllDebugOutput = lambda: None;
+  cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
+
 from .cSSLContext import cSSLContext;
-from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
 
 from mMultiThreading import cLock;
 
