@@ -64,6 +64,12 @@ class cCertificateAuthority(object):
       os.mkdir(oSelf.__sGeneratedCertificatesDatabaseFolderPath);
       oSelf.fReset();
   
+  def fClean(oSelf):
+    # delete everything not needed.
+    for sFileName in os.listdir(oSelf.__sGeneratedCertificatesDatabaseFolderPath):
+      sFilePath = os.path.join(oSelf.__sGeneratedCertificatesDatabaseFolderPath, sFileName);
+      os.remove(sFilePath);
+  
   def fReset(oSelf):
     # delete everything not needed.
     for sFileName in os.listdir(oSelf.__sGeneratedCertificatesDatabaseFolderPath):

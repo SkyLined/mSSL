@@ -59,8 +59,8 @@ try:
   oConsole.fOutput("\xFE\xFE\xFE\xFE Ask oCertificateStore for cSSLContext for hostname 'test-hostname'...", sPadding = "\xFE");
   oSSLContext = oCertificateStore.foGetSSLContextForServerWithHostname("test-hostname");
   
-  oConsole.fOutput("\xFE\xFE\xFE\xFE Resetting oCertificateAuthority... ", sPadding = "\xFE");
-  mSSL.oCertificateAuthority.fReset();
+  oConsole.fOutput("\xFE\xFE\xFE\xFE Cleaning Certificate Authority folder... ", sPadding = "\xFE");
+  mSSL.oCertificateAuthority.fClean();
   
   oConsole.fPrint("+ Done.");
   
