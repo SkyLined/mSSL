@@ -47,7 +47,7 @@ try:
   mSSL.oCertificateAuthority.fReset();
   
   oConsole.fOutput("\xFE\xFE\xFE\xFE Ask oCertificateAuthority to generate cSSLContext for hostname 'test-hostname'...", sPadding = "\xFE");
-  oSSLContext = mSSL.oCertificateAuthority.foGenerateSSLContextForServerWithHostname("test-hostname");
+  oSSLContext = mSSL.oCertificateAuthority.foGenerateServersideSSLContextForHostname("test-hostname");
   oConsole.fOutput("  oSSLContext = ", str(oSSLContext));
   
   oConsole.fOutput("\xFE\xFE\xFE\xFE Generate cCertificateStore instance...", sPadding = "\xFE");
@@ -57,7 +57,7 @@ try:
   oCertificateStore.fAddCertificateAuthority(mSSL.oCertificateAuthority);
   
   oConsole.fOutput("\xFE\xFE\xFE\xFE Ask oCertificateStore for cSSLContext for hostname 'test-hostname'...", sPadding = "\xFE");
-  oSSLContext = oCertificateStore.foGetSSLContextForServerWithHostname("test-hostname");
+  oSSLContext = oCertificateStore.foGetServersideSSLContextForHostname("test-hostname");
   
   oConsole.fOutput("\xFE\xFE\xFE\xFE Cleaning Certificate Authority folder... ", sPadding = "\xFE");
   mSSL.oCertificateAuthority.fClean();

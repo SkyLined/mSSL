@@ -115,7 +115,7 @@ class cCertificateAuthority(object):
       raise AssertionError("OpenSSL error: " + sStdOut + sStdErr);
   
   @ShowDebugOutput
-  def foGetSSLContextForServerWithHostname(oSelf, sHostname):
+  def foGetServersideSSLContextForHostname(oSelf, sHostname):
     oSelf.__oCacheLock.fAcquire();
     try:
       ozSSLContext = oSelf.__doCachedSSLContext_by_sHostname.get(sHostname);
@@ -143,7 +143,7 @@ class cCertificateAuthority(object):
       oSelf.__oCacheLock.fRelease();
   
   @ShowDebugOutput
-  def foGenerateSSLContextForServerWithHostname(oSelf, sHostname):
+  def foGenerateServersideSSLContextForHostname(oSelf, sHostname):
     oSelf.__oCacheLock.fAcquire();
     try:
       ozSSLContext = oSelf.__doCachedSSLContext_by_sHostname.get(sHostname);
