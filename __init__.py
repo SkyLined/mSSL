@@ -1,11 +1,11 @@
 from .oCertificateAuthority import oCertificateAuthority;
 from .cCertificateStore import cCertificateStore;
 from .cSSLContext import cSSLContext;
-import mSSLExceptions;
+import mExceptions;
 
 __all__ = [
   "oCertificateAuthority",
   "cCertificateStore",
   "cSSLContext",
-  "mSSLExceptions",
+  "mExceptions",
 ];

@@ -10,7 +10,7 @@ except: # Do nothing if not available.
   fEnableAllDebugOutput = lambda: None;
   cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
 
-from .mSSLExceptions import *;
+from .mExceptions import *;
 
 class cSSLContext(object):
   @classmethod
