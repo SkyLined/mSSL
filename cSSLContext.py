@@ -87,7 +87,7 @@ class cSSLContext(object):
     if nzTimeoutInSeconds is not None and nzTimeoutInSeconds <= 0:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
-        {"nzTimeoutInSeconds" : nzTimeoutInSeconds},
+        {"nzTimeoutInSeconds" : nzTimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
       );
     nzEndTime = time.clock() + nzTimeoutInSeconds if nzTimeoutInSeconds else None;
     fShowDebugOutput("Wrapping socket%s..." % (" (timeout = %ss)" % nzTimeoutInSeconds if nzTimeoutInSeconds is not None else ""));
@@ -108,7 +108,7 @@ class cSSLContext(object):
     if nzEndTime is not None and time.clock() > nzEndTime:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
-        {"nzTimeoutInSeconds" : nzTimeoutInSeconds},
+        {"nzTimeoutInSeconds" : nzTimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
       );
     fShowDebugOutput("Performing handshake...");
     try:
@@ -117,13 +117,13 @@ class cSSLContext(object):
       fShowDebugOutput("Exception while performing SSL handshake: %s" % repr(oException));
       raise cSSLSecureHandshakeException(
         "Could not perform SSL handshake.",
-        {"oSSLContext": oSelf, "oException": oException},
+        {"oSSLContext": oSelf, "oException": oException, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
       );
     if oSelf.__oPythonSSLContext.check_hostname:
       if nzEndTime is not None and time.clock() > nzEndTime:
         raise cSSLSecureTimeoutException(
           "Timeout before socket could be secured.",
-          {"nzTimeoutInSeconds" : nzTimeoutInSeconds},
+          {"nzTimeoutInSeconds" : nzTimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
         );
       fShowDebugOutput("Checking hostname...");
       try:
@@ -132,7 +132,7 @@ class cSSLContext(object):
         fShowDebugOutput("Exception while getting remote certificate: %s" % repr(oException));
         raise cSSLCannotGetRemoteCertificateException(
           "Could not get remote certificate.",
-          {"oSSLContext": oSelf, "oException": oException},
+          {"oSSLContext": oSelf, "oException": oException, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
         );
       assert oRemoteCertificate, \
           "No certificate!?";
@@ -147,7 +147,7 @@ class cSSLContext(object):
         fShowDebugOutput("Exception while matching hostname: %s" % repr(oException));
         raise cSSLIncorrectHostnameException(
           "The server reported an incorrect hostname for the secure connection",
-          {"oSSLContext": oSelf, "oException": oException},
+          {"oSSLContext": oSelf, "oException": oException, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
         );
     fShowDebugOutput("Connection secured.");
     return oPythonSSLSocket;
