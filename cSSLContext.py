@@ -11,8 +11,11 @@ except: # Do nothing if not available.
   cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
 
 from .mExceptions import *;
+from .mNotProvided import *;
 
 class cSSLContext(object):
+  n0DefaultSecureTimeoutInSeconds = 5;
+  
   @classmethod
   def foForServerWithHostnameAndCertificateFilePath(cClass, sHostname, sCertificateFilePath):
     # Server side with everything in one file
@@ -58,8 +61,8 @@ class cSSLContext(object):
     return cClass(None, oPythonSSLContext, bServerSide = False, bUnverified = True);
 
   @ShowDebugOutput
-  def __init__(oSelf, szHostname, oPythonSSLContext, bServerSide, bUnverified = False):
-    oSelf.__szHostname = szHostname;
+  def __init__(oSelf, s0Hostname, oPythonSSLContext, bServerSide, bUnverified = False):
+    oSelf.__s0Hostname = s0Hostname;
     oSelf.__oPythonSSLContext = oPythonSSLContext;
     oSelf.__bServerSide = bServerSide;
     oSelf.__bUnverified = bUnverified;
@@ -73,8 +76,8 @@ class cSSLContext(object):
     return not oSelf.__bServerSide;
   
   @property
-  def szHostname(oSelf):
-    return oSelf.__szHostname;
+  def s0Hostname(oSelf):
+    return oSelf.__s0Hostname;
   
   def fAddCertificateAuthority(oSelf, oCertificateAuthority):
     oCertificateAuthority.fVerifyPythonSSLContext(oSelf.__oPythonSSLContext);
@@ -82,21 +85,22 @@ class cSSLContext(object):
   @ShowDebugOutput
   def foWrapSocket(oSelf,
     oPythonSocket,
-    nzTimeoutInSeconds = None,
+    n0zTimeoutInSeconds = zNotProvided,
   ):
-    if nzTimeoutInSeconds is not None and nzTimeoutInSeconds <= 0:
+    n0TimeoutInSeconds = fxGetFirstProvidedValue(n0zTimeoutInSeconds, oSelf.n0DefaultSecureTimeoutInSeconds);
+    if n0TimeoutInSeconds is not None and n0TimeoutInSeconds <= 0:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
-        {"nzTimeoutInSeconds" : nzTimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
+        {"n0TimeoutInSeconds" : n0TimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
       );
-    nzEndTime = time.clock() + nzTimeoutInSeconds if nzTimeoutInSeconds else None;
-    fShowDebugOutput("Wrapping socket%s..." % (" (timeout = %ss)" % nzTimeoutInSeconds if nzTimeoutInSeconds is not None else ""));
+    n0EndTime = time.clock() + n0TimeoutInSeconds if n0TimeoutInSeconds else None;
+    fShowDebugOutput("Wrapping socket%s..." % (" (timeout = %ss)" % n0TimeoutInSeconds if n0TimeoutInSeconds is not None else ""));
     try:
-      oPythonSocket.settimeout(nzTimeoutInSeconds);
+      oPythonSocket.settimeout(n0TimeoutInSeconds);
       oPythonSSLSocket = oSelf.__oPythonSSLContext.wrap_socket(
         sock = oPythonSocket,
         server_side = oSelf.__bServerSide,
-        server_hostname = None if oSelf.__bServerSide else oSelf.__szHostname,
+        server_hostname = None if oSelf.__bServerSide else oSelf.__s0Hostname,
         do_handshake_on_connect = False,
       );
     except ssl.SSLError as oException:
@@ -105,10 +109,10 @@ class cSSLContext(object):
         "Could not create secure socket.",
         {"oSSLContext": oSelf, "oException": oException},
       );
-    if nzEndTime is not None and time.clock() > nzEndTime:
+    if n0EndTime is not None and time.clock() > n0EndTime:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
-        {"nzTimeoutInSeconds" : nzTimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
+        {"n0TimeoutInSeconds" : n0TimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
       );
     fShowDebugOutput("Performing handshake...");
     try:
@@ -120,10 +124,10 @@ class cSSLContext(object):
         {"oSSLContext": oSelf, "oException": oException, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
       );
     if oSelf.__oPythonSSLContext.check_hostname:
-      if nzEndTime is not None and time.clock() > nzEndTime:
+      if n0EndTime is not None and time.clock() > n0EndTime:
         raise cSSLSecureTimeoutException(
           "Timeout before socket could be secured.",
-          {"nzTimeoutInSeconds" : nzTimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
+          {"n0TimeoutInSeconds" : n0TimeoutInSeconds, "sRemoteAddress": "%s:%d" % oPythonSocket.getpeername()},
         );
       fShowDebugOutput("Checking hostname...");
       try:
@@ -136,13 +140,13 @@ class cSSLContext(object):
         );
       assert oRemoteCertificate, \
           "No certificate!?";
-      if nzEndTime is not None and time.clock() > nzEndTime:
+      if n0EndTime is not None and time.clock() > n0EndTime:
         raise cSSLSecureTimeoutException(
           "Timeout before socket could be secured.",
-          {"nzTimeoutInSeconds" : nzTimeoutInSeconds},
+          {"n0TimeoutInSeconds" : n0TimeoutInSeconds},
         );
       try:
-        ssl.match_hostname(oRemoteCertificate, oSelf.__szHostname);
+        ssl.match_hostname(oRemoteCertificate, oSelf.__s0Hostname);
       except ssl.CertificateError as oException:
         fShowDebugOutput("Exception while matching hostname: %s" % repr(oException));
         raise cSSLIncorrectHostnameException(
@@ -156,7 +160,7 @@ class cSSLContext(object):
     # This is done without a property lock, so race-conditions exist and it
     # approximates the real values.
     return [s for s in [
-      ("hostname=%s" % oSelf.__szHostname) if oSelf.__szHostname else "NO HOSTNAME",
+      ("hostname=%s" % oSelf.__s0Hostname) if oSelf.__s0Hostname else "NO HOSTNAME",
       "%s side" % ("server" if oSelf.__bServerSide else "client"),
       "checks hostname" if oSelf.__oPythonSSLContext.check_hostname else "DOES NOT CHECK HOSTNAME",
       "UNVERIFIED" if oSelf.__bUnverified else None,
