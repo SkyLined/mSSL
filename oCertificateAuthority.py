@@ -24,7 +24,7 @@ gnDeadlockTimeoutInSeconds = 30; # We will be accessing files and executing code
 goCertificateFilesLock = cLock(
   "cCertificateAuthority.py/goCertificateFilesLock",
   # If this lock is held for a long enough time while another thread is attempting to acquire it, report an error:
-  nzDeadlockTimeoutInSeconds = gnDeadlockTimeoutInSeconds,
+  n0DeadlockTimeoutInSeconds = gnDeadlockTimeoutInSeconds,
 );
 
 dGeneratedCertificatesDatabaseFile_sResetContent_by_sName = {
@@ -57,7 +57,7 @@ class cCertificateAuthority(object):
         "Cannot find OpenSSL CA Certificates file %s" % oSelf.__sOpenSSLCACertificatesFilePath;
     
     oSelf.__oCacheLock = cLock("%s.__oCacheLock" % oSelf.__class__.__name__,
-        nzDeadlockTimeoutInSeconds = gnDeadlockTimeoutInSeconds);
+        n0DeadlockTimeoutInSeconds = gnDeadlockTimeoutInSeconds);
     oSelf.__doCachedSSLContext_by_sHostname = {};
     
     if not os.path.isdir(oSelf.__sGeneratedCertificatesDatabaseFolderPath):
@@ -118,9 +118,9 @@ class cCertificateAuthority(object):
   def foGetServersideSSLContextForHostname(oSelf, sHostname):
     oSelf.__oCacheLock.fAcquire();
     try:
-      ozSSLContext = oSelf.__doCachedSSLContext_by_sHostname.get(sHostname);
-      if ozSSLContext:
-        return ozSSLContext;
+      o0SSLContext = oSelf.__doCachedSSLContext_by_sHostname.get(sHostname);
+      if o0SSLContext:
+        return o0SSLContext;
       fShowDebugOutput("Loading context for %s from file..." % sHostname);
       sKeyFilePath = os.path.join(oSelf.__sGeneratedCertificatesDatabaseFolderPath, "%s.key.pem" % sHostname);
       sCertificateFilePath = os.path.join(oSelf.__sGeneratedCertificatesDatabaseFolderPath, "%s.cert.pem" % sHostname);
@@ -146,9 +146,9 @@ class cCertificateAuthority(object):
   def foGenerateServersideSSLContextForHostname(oSelf, sHostname):
     oSelf.__oCacheLock.fAcquire();
     try:
-      ozSSLContext = oSelf.__doCachedSSLContext_by_sHostname.get(sHostname);
-      if ozSSLContext:
-        return ozSSLContext;
+      o0SSLContext = oSelf.__doCachedSSLContext_by_sHostname.get(sHostname);
+      if o0SSLContext:
+        return o0SSLContext;
       sKeyFilePath = os.path.join(oSelf.__sGeneratedCertificatesDatabaseFolderPath, "%s.key.pem" % sHostname);
       sCertificateFilePath = os.path.join(oSelf.__sGeneratedCertificatesDatabaseFolderPath, "%s.cert.pem" % sHostname);
       goCertificateFilesLock.fAcquire();
