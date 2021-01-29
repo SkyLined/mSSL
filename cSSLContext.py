@@ -10,8 +10,9 @@ except: # Do nothing if not available.
   fEnableAllDebugOutput = lambda: None;
   cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
 
+from mNotProvided import *;
+
 from .mExceptions import *;
-from .mNotProvided import *;
 
 class cSSLContext(object):
   n0DefaultSecureTimeoutInSeconds = 5;
