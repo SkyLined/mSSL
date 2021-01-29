@@ -155,15 +155,54 @@ class cSSLContext(object):
         );
     fShowDebugOutput("Connection secured.");
     return oPythonSSLSocket;
-
+  
   def fasGetDetails(oSelf):
     # This is done without a property lock, so race-conditions exist and it
     # approximates the real values.
+    if oSelf.__bServerSide:
+      asCertificates = [];
+      s0HostName = None;
+      for dxPythonCertificateInformation in oSelf.__oPythonSSLContext.get_ca_certs():
+        s0OrganizationName = None;
+        s0CommonName = None;
+        ttsSubjectData = dxPythonCertificateInformation["subject"];
+        for ttsData in ttsSubjectData:
+          assert len(ttsData) == 1, \
+              "Expected a tuple with a single value, got %s" % repr(ttsData);
+          (sName, sValue) = ttsData[0];
+          if sName == "organizationName":
+            s0OrganizationName = sValue;
+          elif sName == "commonName":
+            s0CommonName = sValue;
+            if s0HostName is None:
+              s0HostName = s0CommonName;
+            else:
+              s0CommonName += "(repeat!)" if s0HostName == sValue else "(different!?)"; # Mark additional commonName values
+        # Must be in the first certificate!
+        assert s0HostName, \
+            "First certificate in chain does not contain 'commonName' value! %s" % repr(ttsSubjectData);
+        assert s0CommonName or s0OrganizationName, \
+            "Python certificate information does not contain 'organizationName' value! %s" % repr(ttsSubjectData);
+        sSerialNumber = dxPythonCertificateInformation["serialNumber"];
+        asCertificates.append("%s#%s" % (
+          ("%s@%s" % (s0CommonName, s0OrganizationName)) if s0CommonName and s0OrganizationName else
+              s0CommonName if s0CommonName else
+              s0OrganizationName if s0OrganizationName else
+              "",
+          sSerialNumber
+        ));
+      if asCertificates:
+        sNotes = "certificate chain=%s" % " => ".join(asCertificates);
+      else:
+        sNotes = "no certificate chain";
+    else:
+      sNotes = "%d certificate authorities" % len(oSelf.__oPythonSSLContext.get_ca_certs());
     return [s for s in [
       ("hostname=%s" % oSelf.__s0Hostname) if oSelf.__s0Hostname else "NO HOSTNAME",
       "%s side" % ("server" if oSelf.__bServerSide else "client"),
       "checks hostname" if oSelf.__oPythonSSLContext.check_hostname else "DOES NOT CHECK HOSTNAME",
       "UNVERIFIED" if oSelf.__bUnverified else None,
+      sNotes,
     ] if s];
   
   def __repr__(oSelf):
