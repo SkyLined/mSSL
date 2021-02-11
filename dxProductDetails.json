@@ -1,4 +1,6 @@
 {
+  "asProductTypes": ["Python module"],
+  "sPythonModuleName": "mSSL",
   "asDependentOnProductNames": [
     "mMultiThreading",
     "mNotProvided"
