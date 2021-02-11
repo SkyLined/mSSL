@@ -23,7 +23,6 @@ socket
 ssl
 string
 strop
-struct
 subprocess
 textwrap
 thread
