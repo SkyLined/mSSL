@@ -1,17 +1,21 @@
 {
-  "asProductTypes": ["Python module"],
-  "sPythonModuleName": "mSSL",
   "asDependentOnProductNames": [
-    "mMultiThreading",
+    "mMultiThreading", 
     "mNotProvided"
   ], 
+  "asJavaScriptModuleNames": [], 
   "asOptionalProductNames": [
-    "cFileSystemItem",
+    "cFileSystemItem", 
     "mDebugOutput", 
     "mWindowsSDK", 
     "oConsole"
   ], 
-  "oProductVersion": "2020-07-09 16:22", 
+  "asPHPModuleNames": [], 
+  "asProductTypes": [
+    "Python module"
+  ], 
+  "asPythonApplicationNames": [], 
+  "oProductVersion": "2021-03-01 09:13", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "mSSL", 
@@ -22,5 +26,6 @@
   "sLicenseServerURL": null, 
   "sProductAuthor": "SkyLined", 
   "sProductName": "mSSL", 
-  "sProductURL": "https://github.com/SkyLined/mSSL"
+  "sProductURL": "https://github.com/SkyLined/mSSL", 
+  "sPythonModuleName": "mSSL"
 }
