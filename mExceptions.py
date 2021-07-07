@@ -1,13 +1,13 @@
 class cSSLException(Exception):
-  def __init__(oSelf, sMessage, xDetails):
+  def __init__(oSelf, sMessage, dxDetails):
     oSelf.sMessage = sMessage;
-    oSelf.xDetails = xDetails;
-    Exception.__init__(oSelf, (sMessage, xDetails));
+    oSelf.dxDetails = dxDetails;
+    Exception.__init__(oSelf, sMessage, dxDetails);
   
   def __repr__(oSelf):
     return "<%s %s>" % (oSelf.__class__.__name__, oSelf);
   def __str__(oSelf):
-    sDetails = str(oSelf.xDetails) if not hasattr(oSelf.xDetails, "fsToString") else oSelf.xDetails.fsToString();
+    sDetails = ", ".join("%s: %s" % (str(sName), repr(xValue)) for (sName, xValue) in oSelf.dxDetails.items());
     return "%s (%s)" % (oSelf.sMessage, sDetails);
 
 class cSSLSecureTimeoutException(cSSLException):
@@ -15,6 +15,9 @@ class cSSLSecureTimeoutException(cSSLException):
 
 class cSSLWrapSocketException(cSSLException):
   pass; # Cannot wrap the socket in SSL.
+
+class cSSLUnknownCertificateAuthorityException(cSSLException):
+  pass; # Cannot complete a secure handshake successfully because the signing Certificate Authority is not known.
 
 class cSSLSecureHandshakeException(cSSLException):
   pass; # Cannot complete a secure handshake successfully

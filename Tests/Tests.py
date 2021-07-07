@@ -1,13 +1,16 @@
 from fTestDependencies import fTestDependencies;
 fTestDependencies();
 
-try:
-  import mDebugOutput;
-except:
-  mDebugOutput = None;
+try: # mDebugOutput use is Optional
+  import mDebugOutput as m0DebugOutput;
+except ModuleNotFoundError as oException:
+  if oException.args[0] != "No module named 'mDebugOutput'":
+    raise;
+  m0DebugOutput = None;
+
 try:
   try:
-    from oConsole import oConsole;
+    from mConsole import oConsole;
   except:
     import sys, threading;
     oConsoleLock = threading.Lock();
@@ -16,13 +19,13 @@ try:
       def fOutput(*txArguments, **dxArguments):
         sOutput = "";
         for x in txArguments:
-          if isinstance(x, (str, unicode)):
+          if isinstance(x, str):
             sOutput += x;
         sPadding = dxArguments.get("sPadding");
         if sPadding:
           sOutput.ljust(120, sPadding);
         oConsoleLock.acquire();
-        print sOutput;
+        print(sOutput);
         sys.stdout.flush();
         oConsoleLock.release();
       fPrint = fOutput;
@@ -34,37 +37,88 @@ try:
   
   import mSSL;
   
+  bQuick = False;
+  bFull = False;
   for sArgument in sys.argv[1:]:
     if sArgument == "--quick": 
-      pass; # Always quick :)
+      bQuick = True;
+    elif sArgument == "--full": 
+      bFull = True;
     elif sArgument == "--debug": 
-      fEnableDebugOutputForModule(mSSL);
+      assert m0DebugOutput, \
+          "This feature requires mDebugOutput!";
+      m0DebugOutput.fEnableDebugOutputForModule(mSSL);
     else:
       raise AssertionError("Unknown argument %s" % sArgument);
+  assert not bQuick or not bFull, \
+      "Cannot test both quick and full!";
   
-  oConsole.fOutput("\xFE\xFE\xFE\xFE Resetting oCertificateAuthority... ", sPadding = "\xFE");
-  oConsole.fOutput("  oCertificateAuthority = ", str(mSSL.oCertificateAuthority));
-  mSSL.oCertificateAuthority.fReset();
+  sbTestHostname = b"test.domain.name";
+  sTestHostname = str(sbTestHostname, "ascii", "strict");
+  HEADER = 0xFF0A;
+  DELETE_FILE = 0xFF0C;
+  DELETE_FOLDER = 0xFF04;
+  OVERWRITE_FILE = 0xFF0E;
   
-  oConsole.fOutput("\xFE\xFE\xFE\xFE Ask oCertificateAuthority to generate cSSLContext for hostname 'test-hostname'...", sPadding = "\xFE");
-  oSSLContext = mSSL.oCertificateAuthority.foGenerateServersideSSLContextForHostname("test-hostname");
+  def fShowDeleteOrOverwriteFileOrFolder(sFileOrFolderPath, bFile, s0NewContent):
+    if not bFile:
+      oConsole.fOutput(DELETE_FOLDER, " - ", sFileOrFolderPath);
+    elif s0NewContent is None:
+      oConsole.fOutput(DELETE_FILE, " - ", sFileOrFolderPath);
+    else:
+      oConsole.fOutput(OVERWRITE_FILE, " * ", sFileOrFolderPath, " => %d bytes." % len(s0NewContent));
+  
+  sCertificateAuthorityFolderPath = os.path.join(os.path.dirname(__file__), "temp");
+  
+  oCertificateAuthority = mSSL.cCertificateAuthority(sCertificateAuthorityFolderPath, "mSSL Test");
+  oConsole.fOutput("  oCertificateAuthority = ", str(oCertificateAuthority));
+  if os.path.isdir(sCertificateAuthorityFolderPath):
+    if bQuick:
+      oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Reset Certificate Authority folder... ", sPadding = "\u2500");
+      oCertificateAuthority.fResetCacheFolder(fShowDeleteOrOverwriteFileOrFolder);
+    else:
+      oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Delete Certificate Authority folder... ", sPadding = "\u2500");
+      oCertificateAuthority.fDeleteCacheFolder(fShowDeleteOrOverwriteFileOrFolder);
+  
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority for cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
+  o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHostname(sbTestHostname);
+  assert o0SSLContext is None, \
+      "Expected None, got %s" % repr(o0SSLContext);
+  
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority to generate cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
+  oSSLContext = oCertificateAuthority.foGenerateServersideSSLContextForHostname(sbTestHostname);
   oConsole.fOutput("  oSSLContext = ", str(oSSLContext));
   
-  oConsole.fOutput("\xFE\xFE\xFE\xFE Generate cCertificateStore instance...", sPadding = "\xFE");
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Resetting oCertificateAuthority... ", sPadding = "\u2500");
+  oConsole.fOutput("  oCertificateAuthority = ", str(oCertificateAuthority));
+  oCertificateAuthority.fResetCacheFolder(fShowDeleteOrOverwriteFileOrFolder);
+  oConsole.fOutput("  oCertificateAuthority = ", str(oCertificateAuthority));
+  
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority for cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
+  o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHostname(sbTestHostname);
+  assert o0SSLContext is None, \
+      "Expected None, go %s" % repr(o0SSLContext);
+  
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority to generate cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
+  oSSLContext = oCertificateAuthority.foGenerateServersideSSLContextForHostname(sbTestHostname);
+  oConsole.fOutput("  oSSLContext = ", str(oSSLContext));
+  
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Generate cCertificateStore instance...", sPadding = "\u2500");
   oCertificateStore = mSSL.cCertificateStore();
   
-  oConsole.fOutput("\xFE\xFE\xFE\xFE Add oCertificateAuthority to oCertificateStore...", sPadding = "\xFE");
-  oCertificateStore.fAddCertificateAuthority(mSSL.oCertificateAuthority);
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Add oCertificateAuthority to oCertificateStore...", sPadding = "\u2500");
+  oCertificateStore.fAddCertificateAuthority(oCertificateAuthority);
   
-  oConsole.fOutput("\xFE\xFE\xFE\xFE Ask oCertificateStore for cSSLContext for hostname 'test-hostname'...", sPadding = "\xFE");
-  oSSLContext = oCertificateStore.foGetServersideSSLContextForHostname("test-hostname");
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateStore for cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
+  oSSLContext = oCertificateStore.foGetServersideSSLContextForHostname(sbTestHostname);
   
-  oConsole.fOutput("\xFE\xFE\xFE\xFE Cleaning Certificate Authority folder... ", sPadding = "\xFE");
-  mSSL.oCertificateAuthority.fClean();
+  if not bQuick:
+    oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Delete Certificate Authority folder... ", sPadding = "\u2500");
+    oCertificateAuthority.fDeleteCacheFolder(fShowDeleteOrOverwriteFileOrFolder);
   
-  oConsole.fPrint("+ Done.");
+  oConsole.fOutput("+ Done.");
   
 except Exception as oException:
-  if mDebugOutput:
-    mDebugOutput.fTerminateWithException(oException, bShowStacksForAllThread = True);
+  if m0DebugOutput:
+    m0DebugOutput.fTerminateWithException(oException, bShowStacksForAllThread = True);
   raise;

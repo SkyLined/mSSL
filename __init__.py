@@ -1,8 +1,4 @@
-from .mSSL import *;
+from .fInitializeProduct import fInitializeProduct;
+fInitializeProduct();
 
-__all__ = [
-  "oCertificateAuthority",
-  "cCertificateStore",
-  "cSSLContext",
-  "mExceptions",
-];
+from .mExports import *;
