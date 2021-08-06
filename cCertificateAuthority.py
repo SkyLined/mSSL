@@ -139,15 +139,21 @@ class cCertificateAuthority(object):
     finally:
       oSelf.__oCacheLock.fRelease();
   
+  def __fCreateBaseFolderIfNeeded(oSelf):
+    return fsCreateFolderIfNeededAndReturnPath(oSelf.__sBaseFolderPath);
+  
   def __fsGetCertificateCacheFolderPath(oSelf):
     return os.path.join(oSelf.__sBaseFolderPath, "Certificates");
   def __fsCreateCertificatesCacheFolderIfNeededAndReturnPath(oSelf):
+    oSelf.__fCreateBaseFolderIfNeeded();
     return fsCreateFolderIfNeededAndReturnPath(oSelf.__fsGetCertificateCacheFolderPath());
     
   def __fsCreateDatabaseFolderIfNeededAndReturnPath(oSelf):
+    oSelf.__fCreateBaseFolderIfNeeded();
     return fsCreateFolderIfNeededAndReturnPath(os.path.join(oSelf.__sBaseFolderPath, "Database"));
     
   def __fsCreateCAConfigFileIfNeededAndReturnPath(oSelf):
+    oSelf.__fCreateBaseFolderIfNeeded();
     sFilePath = os.path.join(oSelf.__sBaseFolderPath, "%s CA openssl.conf" % oSelf.__sAuthorityName);
     sContent = gsConfigFileTemplate % {
       "sDatabaseFolderPath": oSelf.__fsCreateDatabaseFolderIfNeededAndReturnPath().replace(os.sep, os.altsep),
@@ -157,6 +163,7 @@ class cCertificateAuthority(object):
   def fsGetRootCertificateFilePath(oSelf):
     return oSelf.__ftsCreateCAPrivateKeyAndCertificateFilesIfNeededAndReturnPaths()[1];
   def __ftsCreateCAPrivateKeyAndCertificateFilesIfNeededAndReturnPaths(oSelf):
+    oSelf.__fCreateBaseFolderIfNeeded();
     sCAPrivateKeyFilePath = os.path.join(oSelf.__sBaseFolderPath, "%s CA private key.pem" % oSelf.__sAuthorityName);
     if not os.path.isfile(sCAPrivateKeyFilePath):
       fExecuteOpenSSL(
