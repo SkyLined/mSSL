@@ -27,3 +27,13 @@ class cSSLCannotGetRemoteCertificateException(cSSLException):
 
 class cSSLIncorrectHostnameException(cSSLException):
   pass; # The remote certificate is for an incorrect hostname.
+
+acExceptions = [
+  cSSLException,
+  cSSLSecureTimeoutException,
+  cSSLWrapSocketException,
+  cSSLUnknownCertificateAuthorityException,
+  cSSLSecureHandshakeException,
+  cSSLCannotGetRemoteCertificateException,
+  cSSLIncorrectHostnameException,
+];
