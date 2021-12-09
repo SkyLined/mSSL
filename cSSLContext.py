@@ -143,6 +143,11 @@ class cSSLContext(object):
     fShowDebugOutput("Performing handshake...");
     try:
       oPythonSSLSocket.do_handshake();
+    except TimeoutError as oException:
+      raise cSSLSecureTimeoutException(
+        "Timeout before socket could be secured.",
+        dxDetails,
+      );
     except ssl.SSLError as oException:
       fShowDebugOutput("Exception while performing SSL handshake: %s" % repr(oException));
       if oException.args[1].find("ALERT_UNKNOWN_CA") != -1:
