@@ -1,14 +1,17 @@
 class cSSLException(Exception):
-  def __init__(oSelf, sMessage, dxDetails):
+  def __init__(oSelf, sMessage, *, dxDetails = None):
+    assert isinstance(dxDetails, dict), \
+        "dxDetails must be a dict, not %s" % repr(dxDetails);
     oSelf.sMessage = sMessage;
     oSelf.dxDetails = dxDetails;
     Exception.__init__(oSelf, sMessage, dxDetails);
   
-  def __repr__(oSelf):
-    return "<%s %s>" % (oSelf.__class__.__name__, oSelf);
+  def fasDetails(oSelf):
+    return ["%s: %s" % (str(sName), repr(xValue)) for (sName, xValue) in oSelf.dxDetails.items()];
   def __str__(oSelf):
-    sDetails = ", ".join("%s: %s" % (str(sName), repr(xValue)) for (sName, xValue) in oSelf.dxDetails.items());
-    return "%s (%s)" % (oSelf.sMessage, sDetails);
+    return "%s (%s)" % (oSelf.sMessage, ", ".join(oSelf.fasDetails()));
+  def __repr__(oSelf):
+    return "<%s.%s %s>" % (oSelf.__class__.__module__, oSelf.__class__.__name__, oSelf);
 
 class cSSLSecureTimeoutException(cSSLException):
   pass; # Cannot secure the connection within the maximum acceptable time.

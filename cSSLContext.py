@@ -110,6 +110,7 @@ class cSSLContext(object):
   def foWrapSocket(oSelf,
     oPythonSocket,
     n0zTimeoutInSeconds = zNotProvided,
+    o0Connection = None,
   ):
     n0TimeoutInSeconds = fxGetFirstProvidedValue(n0zTimeoutInSeconds, oSelf.n0DefaultSecureTimeoutInSeconds);
     txRemoteAddress = oPythonSocket.getpeername();
@@ -117,7 +118,7 @@ class cSSLContext(object):
     if n0TimeoutInSeconds is not None and n0TimeoutInSeconds <= 0:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
-        dxDetails,
+        dxDetails = dxDetails,
       );
     n0EndTime = time.time() + n0TimeoutInSeconds if n0TimeoutInSeconds else None;
     fShowDebugOutput("Wrapping socket%s..." % (" (timeout = %ss)" % n0TimeoutInSeconds if n0TimeoutInSeconds is not None else ""));
@@ -134,12 +135,12 @@ class cSSLContext(object):
       dxDetails["oException"] = oException;
       raise cSSLWrapSocketException(
         "Could not create secure socket.",
-        dxDetails,
+        dxDetails = dxDetails,
       );
     if n0EndTime is not None and time.time() > n0EndTime:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
-        dxDetails,
+        dxDetails = dxDetails,
       );
     fShowDebugOutput("Performing handshake...");
     try:
@@ -147,7 +148,7 @@ class cSSLContext(object):
     except TimeoutError as oException:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
-        dxDetails,
+        dxDetails = dxDetails,
       );
     except ssl.SSLError as oException:
       fShowDebugOutput("Exception while performing SSL handshake: %s" % repr(oException));
@@ -160,7 +161,7 @@ class cSSLContext(object):
           dxDetails["dxPeerCertificate"] = dxPeerCertificate;
           raise cSSLUnknownCertificateAuthorityException(
             "The remote host is using a certificate signed by an unknown Certificate Authority",
-            dxDetails,
+            dxDetails = dxDetails,
           );
       elif oException.args[1].find("invalid CA certificate") != -1:
         try:
@@ -171,18 +172,18 @@ class cSSLContext(object):
           dxDetails["dxPeerCertificate"] = dxPeerCertificate;
           raise cSSLUnknownCertificateAuthorityException(
             "The remote host is using a certificate signed by an unknown Certificate Authority",
-            dxDetails,
+            dxDetails = dxDetails,
           );
       dxDetails["oException"] = oException;
       raise cSSLSecureHandshakeException(
         "Could not perform SSL handshake.",
-        dxDetails,
+        dxDetails = dxDetails,
       );
     if oSelf.__oPythonSSLContext.check_hostname:
       if n0EndTime is not None and time.time() > n0EndTime:
         raise cSSLSecureTimeoutException(
           "Timeout before socket could be secured.",
-          dxDetails,
+          dxDetails = dxDetails,
         );
       fShowDebugOutput("Checking domain name...");
       try:
@@ -192,14 +193,14 @@ class cSSLContext(object):
         dxDetails["oException"] = oException;
         raise cSSLCannotGetRemoteCertificateException(
           "Could not get remote certificate.",
-          dxDetails,
+          dxDetails = dxDetails,
         );
       assert oRemoteCertificate, \
           "No certificate!?";
       if n0EndTime is not None and time.time() > n0EndTime:
         raise cSSLSecureTimeoutException(
           "Timeout before socket could be secured.",
-          dxDetails,
+          dxDetails = dxDetails,
         );
       try:
         ssl.match_hostname(oRemoteCertificate, str(oSelf.__sb0Hostname, "ascii", "strict"));
@@ -208,7 +209,7 @@ class cSSLContext(object):
         dxDetails["oException"] = oException;
         raise cSSLIncorrectHostnameException(
           "The server reported an incorrect domain name for the secure connection",
-          dxDetails,
+          dxDetails = dxDetails,
         );
     fShowDebugOutput("Connection secured.");
     return oPythonSSLSocket;
