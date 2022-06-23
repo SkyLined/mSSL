@@ -72,7 +72,8 @@ try:
     else:
       oConsole.fOutput(OVERWRITE_FILE, " * ", sFileOrFolderPath, " => %d bytes." % len(s0NewContent));
   
-  sCertificateAuthorityFolderPath = os.path.join(os.path.dirname(__file__), "temp");
+  import tempfile;
+  sCertificateAuthorityFolderPath = os.path.join(tempfile.gettempdir(), "tmp");
   
   oCertificateAuthority = mSSL.cCertificateAuthority(sCertificateAuthorityFolderPath, "mSSL Test");
   oConsole.fOutput("  oCertificateAuthority = ", str(oCertificateAuthority));
