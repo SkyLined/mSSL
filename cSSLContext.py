@@ -114,7 +114,11 @@ class cSSLContext(object):
   ):
     n0TimeoutInSeconds = fxGetFirstProvidedValue(n0zTimeoutInSeconds, oSelf.n0DefaultSecureTimeoutInSeconds);
     txRemoteAddress = oPythonSocket.getpeername();
-    dxDetails = {"oSSLContext": oSelf, "n0TimeoutInSeconds" : n0TimeoutInSeconds, "sRemoteAddress": "%s:%d" % (txRemoteAddress[0], txRemoteAddress[1])};
+    dxDetails = {
+      "oSSLContext": oSelf,
+      "n0TimeoutInSeconds" : n0TimeoutInSeconds,
+      "sRemoteAddress": "%s:%d" % (txRemoteAddress[0], txRemoteAddress[1]),
+    };
     if n0TimeoutInSeconds is not None and n0TimeoutInSeconds <= 0:
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
