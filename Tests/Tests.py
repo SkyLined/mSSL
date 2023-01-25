@@ -38,7 +38,7 @@ try:
       def fStatus(*txArguments, **dxArguments):
         pass;
   
-  import json, os, sys;
+  import os, sys;
   
   import mSSL;
   
