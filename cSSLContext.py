@@ -1,4 +1,4 @@
-import ssl, time;
+import socket, ssl, time;
 
 try: # mDebugOutput use is Optional
   from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
@@ -8,7 +8,10 @@ except ModuleNotFoundError as oException:
   ShowDebugOutput = lambda fx: fx; # NOP
   fShowDebugOutput = lambda x, s0 = None: x; # NOP
 
-from mNotProvided import *;
+from mNotProvided import \
+  fAssertType, \
+  fxGetFirstProvidedValue, \
+  zNotProvided;
 
 from .mExceptions import *;
 
@@ -149,7 +152,7 @@ class cSSLContext(object):
     fShowDebugOutput("Performing handshake...");
     try:
       oPythonSSLSocket.do_handshake();
-    except TimeoutError as oException:
+    except (socket.timeout, TimeoutError):
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
         dxDetails = dxDetails,
