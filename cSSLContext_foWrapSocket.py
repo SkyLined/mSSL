@@ -38,7 +38,7 @@ def cSSLContext_foWrapSocket(oSelf,
 ):
   fAssertTypes({
     "oPythonSocket": (oPythonSocket, socket.socket),
-    "n0zTimeoutInSeconds": (n0zTimeoutInSeconds, int, float, None),
+    "n0zTimeoutInSeconds": (n0zTimeoutInSeconds, int, float, None, zNotProvided),
   });
   n0TimeoutInSeconds = fxGetFirstProvidedValue(n0zTimeoutInSeconds, oSelf.n0DefaultSecureTimeoutInSeconds);
   txRemoteAddress = oPythonSocket.getpeername();
