@@ -1,4 +1,4 @@
-from mNotProvided import *;
+from mNotProvided import fAssertType;
 
 try: # mDebugOutput use is Optional
   from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
@@ -33,13 +33,13 @@ class cCertificateStore(object):
     oSelf.__aoCertificateAuthorities.append(oCertificateAuthority);
   
   @ShowDebugOutput
-  def fAddCertificateFilePathForHostname(sbHostname, sCertificateFilePath):
+  def fAddCertificateFilePathForHostname(oSelf, sbHostname, sCertificateFilePath):
     fAssertType("sbHostname", sbHostname, bytes);
     fAssertType("sCertificateFilePath", sCertificateFilePath, str);
     oSelf.__dsCertificateFilePath_by_sbHostname[sbHostname] = sCertificateFilePath;
   
   @ShowDebugOutput
-  def fAddCertificateAndKeyFilePathsForHostname(sbHostname, sCertificateFilePath, sKeyFilePath):
+  def fAddCertificateAndKeyFilePathsForHostname(oSelf, sbHostname, sCertificateFilePath, sKeyFilePath):
     fAssertType("sbHostname", sbHostname, bytes);
     fAssertType("sCertificateFilePath", sCertificateFilePath, str);
     fAssertType("sKeyFilePath", sKeyFilePath, str);
@@ -85,7 +85,11 @@ class cCertificateStore(object):
     return oSelf.__oSSLContextForClientWithoutVerification;
     
   @ShowDebugOutput
-  def foGetClientsideSSLContextForHostname(oSelf, sbHostname, bCheckHostname = True):
+  def foGetClientsideSSLContextForHostname(oSelf,
+    sbHostname,
+    *,
+    bCheckHostname = True,
+  ):
     fAssertType("sbHostname", sbHostname, bytes);
     doSSLContextForClient_by_sbHostname = (
       oSelf.__doSSLContextWithCheckHostnameForClient_by_sbHostname
@@ -97,9 +101,16 @@ class cCertificateStore(object):
     if not oSSLContext:
       sCertificateFilePath = oSelf.__dsCertificateFilePath_by_sbHostname.get(sbHostname);
       if sCertificateFilePath:
-        oSSLContext = cSSLContext.foForClientWithHostnameAndCertificateFilePath(sbHostname, sCertificateFilePath);
+        oSSLContext = cSSLContext.foForClientWithHostnameAndCertificateFilePath(
+          sbHostname,
+          sCertificateFilePath,
+          bCheckHostname = bCheckHostname,
+        );
       else:
-        oSSLContext = cSSLContext.foForClientWithHostname(sbHostname);
+        oSSLContext = cSSLContext.foForClientWithHostname(
+          sbHostname,
+          bCheckHostname = bCheckHostname,
+        );
       doSSLContextForClient_by_sbHostname[sbHostname] = oSSLContext;
       for oCertificateAuthority in oSelf.__aoCertificateAuthorities:
         oSSLContext.fAddCertificateAuthority(oCertificateAuthority);
