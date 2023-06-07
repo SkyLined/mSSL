@@ -62,11 +62,13 @@ class cSSLContext(object):
     sCertificateFilePath,
     *,
     bCheckHostname = True,
+    bVerifyIntermediateCertificates = True,
   ):
     fAssertTypes({
       "sbHostname": (sbHostname, bytes),
       "sCertificateFilePath": (sCertificateFilePath, str),
       "bCheckHostname": (bCheckHostname, bool),
+      "bVerifyIntermediateCertificates": (bVerifyIntermediateCertificates, bool),
     });
     # Client side with key pinning
     try:
@@ -75,6 +77,8 @@ class cSSLContext(object):
       raise FileNotFoundError(oException.args[0], "Certificate file %s not found!" % (repr(sCertificateFilePath),), *oException.args[2:]);
     oPythonSSLContext.verify_mode = ssl.CERT_REQUIRED;
     oPythonSSLContext.check_hostname = bCheckHostname;
+    if not bVerifyIntermediateCertificates:
+      oPythonSSLContext.verify_flags = ssl.VERIFY_X509_PARTIAL_CHAIN;
     return cClass(sbHostname, oPythonSSLContext, bServerSide = False);
   
   @classmethod
@@ -82,16 +86,20 @@ class cSSLContext(object):
     sbHostname,
     *,
     bCheckHostname = True,
+    bVerifyIntermediateCertificates = True
   ):
     fAssertTypes({
       "sbHostname": (sbHostname, bytes),
       "bCheckHostname": (bCheckHostname, bool),
+      "bVerifyIntermediateCertificates": (bVerifyIntermediateCertificates, bool),
     });
     # Client side
     oPythonSSLContext = ssl.create_default_context();
     oPythonSSLContext.load_default_certs();
     oPythonSSLContext.verify_mode = ssl.CERT_REQUIRED;
     oPythonSSLContext.check_hostname = bCheckHostname;
+    if not bVerifyIntermediateCertificates:
+      oPythonSSLContext.verify_flags = ssl.VERIFY_X509_PARTIAL_CHAIN;
     return cClass(sbHostname, oPythonSSLContext, bServerSide = False);
   
   @classmethod

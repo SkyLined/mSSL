@@ -89,6 +89,7 @@ class cCertificateStore(object):
     sbHostname,
     *,
     bCheckHostname = True,
+    bVerifyIntermediateCertificates = True,
   ):
     fAssertType("sbHostname", sbHostname, bytes);
     doSSLContextForClient_by_sbHostname = (
@@ -105,11 +106,13 @@ class cCertificateStore(object):
           sbHostname,
           sCertificateFilePath,
           bCheckHostname = bCheckHostname,
+          bVerifyIntermediateCertificates = bVerifyIntermediateCertificates,
         );
       else:
         oSSLContext = cSSLContext.foForClientWithHostname(
           sbHostname,
           bCheckHostname = bCheckHostname,
+          bVerifyIntermediateCertificates = bVerifyIntermediateCertificates,
         );
       doSSLContextForClient_by_sbHostname[sbHostname] = oSSLContext;
       for oCertificateAuthority in oSelf.__aoCertificateAuthorities:
