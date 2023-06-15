@@ -11,8 +11,8 @@ except ModuleNotFoundError as oException:
 from .cSSLContext import cSSLContext;
 
 class cCertificateStore(object):
-  __oSSLContextForClientWithoutVerification = cSSLContext.foForClientWithoutVerification();
-  
+  __o0SSLContextForClientWithoutVerification = None; # will be initialized later when  needed
+    
   @ShowDebugOutput
   def __init__(oSelf):
     oSelf.__aoCertificateAuthorities = [];
@@ -82,7 +82,9 @@ class cCertificateStore(object):
   
   @ShowDebugOutput
   def foGetClientsideSSLContextWithoutVerification(oSelf):
-    return oSelf.__oSSLContextForClientWithoutVerification;
+    if oSelf.__o0SSLContextForClientWithoutVerification is None:
+      oSelf.__o0SSLContextForClientWithoutVerification = cSSLContext.foForClientWithoutVerification();
+    return oSelf.__o0SSLContextForClientWithoutVerification;
     
   @ShowDebugOutput
   def foGetClientsideSSLContextForHostname(oSelf,
