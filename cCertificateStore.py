@@ -18,15 +18,13 @@ class cCertificateStore(object):
     oSelf.__aoCertificateAuthorities = [];
     oSelf.__dsCertificateFilePath_by_sbHostname = {};
     oSelf.__dsPrivateKeyFilePath_by_sbHostname = {};
-    oSelf.__doSSLContextWithCheckHostnameForClient_by_sbHostname = {};
-    oSelf.__doSSLContextWithoutCheckHostnameForClient_by_sbHostname = {};
+    oSelf.__doSSLContextForClient_by_sbHostname = {};
     oSelf.__doSSLContextForServer_by_sbHostname = {};
   
   @ShowDebugOutput
   def fAddCertificateAuthority(oSelf, oCertificateAuthority):
     assert (
-      not oSelf.__doSSLContextWithCheckHostnameForClient_by_sbHostname
-      and not oSelf.__doSSLContextWithoutCheckHostnameForClient_by_sbHostname
+      not oSelf.__doSSLContextForClient_by_sbHostname
       and not oSelf.__doSSLContextForServer_by_sbHostname
     ), \
         "Cannot add CAs after creating SSLContexts";
@@ -89,34 +87,21 @@ class cCertificateStore(object):
   @ShowDebugOutput
   def foGetClientsideSSLContextForHostname(oSelf,
     sbHostname,
-    *,
-    bCheckHostname = True,
-    bVerifyIntermediateCertificates = True,
   ):
     fAssertType("sbHostname", sbHostname, bytes);
-    doSSLContextForClient_by_sbHostname = (
-      oSelf.__doSSLContextWithCheckHostnameForClient_by_sbHostname
-      if bCheckHostname else
-      oSelf.__doSSLContextWithoutCheckHostnameForClient_by_sbHostname
-    );
-    
-    oSSLContext = doSSLContextForClient_by_sbHostname.get(sbHostname);
+    oSSLContext = oSelf.__doSSLContextForClient_by_sbHostname.get(sbHostname);
     if not oSSLContext:
       sCertificateFilePath = oSelf.__dsCertificateFilePath_by_sbHostname.get(sbHostname);
       if sCertificateFilePath:
         oSSLContext = cSSLContext.foForClientWithHostnameAndCertificateFilePath(
           sbHostname,
           sCertificateFilePath,
-          bCheckHostname = bCheckHostname,
-          bVerifyIntermediateCertificates = bVerifyIntermediateCertificates,
         );
       else:
         oSSLContext = cSSLContext.foForClientWithHostname(
           sbHostname,
-          bCheckHostname = bCheckHostname,
-          bVerifyIntermediateCertificates = bVerifyIntermediateCertificates,
         );
-      doSSLContextForClient_by_sbHostname[sbHostname] = oSSLContext;
+      oSelf.__doSSLContextForClient_by_sbHostname[sbHostname] = oSSLContext;
       for oCertificateAuthority in oSelf.__aoCertificateAuthorities:
         oSSLContext.fAddCertificateAuthority(oCertificateAuthority);
     return oSSLContext;
@@ -126,10 +111,7 @@ class cCertificateStore(object):
       "%d CAs" % len(oSelf.__aoCertificateAuthorities),
       "%d certs" % len(oSelf.__dsCertificateFilePath_by_sbHostname),
       "%d keys" % len(oSelf.__dsPrivateKeyFilePath_by_sbHostname),
-      "%d client contexts (%d unchecked)" % (
-        len(oSelf.__doSSLContextWithCheckHostnameForClient_by_sbHostname) + len(oSelf.__doSSLContextWithoutCheckHostnameForClient_by_sbHostname),
-        len(oSelf.__doSSLContextWithoutCheckHostnameForClient_by_sbHostname),
-      ),
+      "%d client contexts" % len(oSelf.__doSSLContextForClient_by_sbHostname),
       "%d server contexts" % len(oSelf.__doSSLContextForServer_by_sbHostname),
     ];
   

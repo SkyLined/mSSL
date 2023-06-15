@@ -1,4 +1,4 @@
-import ssl;
+import socket, ssl, time;
 
 try: # mDebugOutput use is Optional
   from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
@@ -9,7 +9,25 @@ except ModuleNotFoundError as oException:
   fShowDebugOutput = lambda x, s0 = None: x; # NOP
 
 from mNotProvided import \
-  fAssertTypes;
+    fAssertTypes, \
+    fxGetFirstProvidedValue, \
+    zNotProvided;
+from .mExceptions import \
+    cSSLCannotGetRemoteCertificateException, \
+    cSSLIncorrectHostnameException, \
+    cSSLInvaliCertificateChainException, \
+    cSSLInvalidCertificateException, \
+    cSSLInvalidCertificateExpiredException, \
+    cSSLInvalidCertificateRevocationListNotAvailableException, \
+    cSSLInvalidHostnameForCertificateException, \
+    cSSLInvalidSelfSignedCertificateException, \
+    cSSLInvalidSelfSignedCertificateInChainException, \
+    cSSLSecureHandshakeException, \
+    cSSLSecureTimeoutException, \
+    cSSLUnknownCertificateAuthorityException, \
+    cSSLWrapSocketException;
+
+gbDebugOutput = True;
 
 class cSSLContext(object):
   n0DefaultSecureTimeoutInSeconds = 5;
@@ -20,16 +38,21 @@ class cSSLContext(object):
     sCertificateFilePath,
   ):
     fAssertTypes({
-      "sbHostname": s(bHostname, bytes),
+      "sbHostname": (sbHostname, bytes),
       "sCertificateFilePath": (sCertificateFilePath, str),
     });
     # Server side with everything in one file
-    oPythonSSLContext = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH);
+    oPythonSSLContextWithoutCheckHostname = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH);
     try:
-      oPythonSSLContext.load_cert_chain(certfile = sCertificateFilePath);
+      oPythonSSLContextWithoutCheckHostname.load_cert_chain(certfile = sCertificateFilePath);
     except FileNotFoundError as oException:
       raise FileNotFoundError(oException.args[0], "Certificate file %s not found!" % (repr(sCertificateFilePath),), *oException.args[2:]);
-    return cClass(sbHostname, oPythonSSLContext, bServerSide = True);
+    return cClass(
+      sb0Hostname = sbHostname,
+      o0PythonSSLContextWithCheckHostname = None,
+      oPythonSSLContextWithoutCheckHostname = oPythonSSLContextWithoutCheckHostname,
+      bServerSide = True,
+    );
   
   @classmethod
   def foForServerWithHostnameAndKeyAndCertificateFilePath(cClass,
@@ -43,81 +66,93 @@ class cSSLContext(object):
       "sCertificateFilePath": (sCertificateFilePath, str),
     });
     # Server side with certificate and private key in separate files
-    oPythonSSLContext = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH);
+    oPythonSSLContextWithoutCheckHostname = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH);
     try:
-      oPythonSSLContext.load_cert_chain(keyfile = sKeyFilePath, certfile = sCertificateFilePath);
+      oPythonSSLContextWithoutCheckHostname.load_cert_chain(keyfile = sKeyFilePath, certfile = sCertificateFilePath);
     except FileNotFoundError as oException:
-      raise FileNotFoundError(oException.args[0], "Certificate file %s or key file %s not found!" % (repr(sCertificateFilePath), repr(sKeyFilePath)), *oException.args[2:]);
+      raise FileNotFoundError(
+        oException.args[0],
+        "Certificate file %s or key file %s not found!" % (
+          repr(sCertificateFilePath),
+          repr(sKeyFilePath),
+        ),
+        *oException.args[2:],
+      );
     except ssl.SSLError as oException:
       fShowDebugOutput("Cannot load certificate chain (keyfile = %s, certfile = %s): %s" % \
           (sKeyFilePath, sCertificateFilePath, oException.message));
       oException.message = "Cannot load certificate chain (keyfile = %s, certfile = %s): %s" % \
           (sKeyFilePath, sCertificateFilePath, oException.message);
       raise;
-    return cClass(sbHostname, oPythonSSLContext, bServerSide = True);
+    return cClass(
+      sb0Hostname = sbHostname,
+      o0PythonSSLContextWithCheckHostname = None,
+      oPythonSSLContextWithoutCheckHostname = oPythonSSLContextWithoutCheckHostname,
+      bServerSide = True,
+    );
   
   @classmethod
   def foForClientWithHostnameAndCertificateFilePath(cClass,
     sbHostname,
     sCertificateFilePath,
-    *,
-    bCheckHostname = True,
-    bVerifyIntermediateCertificates = True,
   ):
     fAssertTypes({
       "sbHostname": (sbHostname, bytes),
       "sCertificateFilePath": (sCertificateFilePath, str),
-      "bCheckHostname": (bCheckHostname, bool),
-      "bVerifyIntermediateCertificates": (bVerifyIntermediateCertificates, bool),
     });
     # Client side with key pinning
     try:
-      oPythonSSLContext = ssl.create_default_context(cafile = sCertificateFilePath);
+      oPythonSSLContextWithCheckHostname = ssl.create_default_context(cafile = sCertificateFilePath);
+      oPythonSSLContextWithoutCheckHostname = ssl.create_default_context(cafile = sCertificateFilePath);
     except FileNotFoundError as oException:
       raise FileNotFoundError(oException.args[0], "Certificate file %s not found!" % (repr(sCertificateFilePath),), *oException.args[2:]);
-    oPythonSSLContext.verify_mode = ssl.CERT_REQUIRED;
-    oPythonSSLContext.check_hostname = bCheckHostname;
-    if not bVerifyIntermediateCertificates:
-      oPythonSSLContext.verify_flags = ssl.VERIFY_X509_PARTIAL_CHAIN;
-    return cClass(sbHostname, oPythonSSLContext, bServerSide = False);
+    return cClass(
+      sb0Hostname = sbHostname,
+      o0PythonSSLContextWithCheckHostname = oPythonSSLContextWithCheckHostname,
+      oPythonSSLContextWithoutCheckHostname = oPythonSSLContextWithoutCheckHostname,
+      bServerSide = False,
+    );
   
   @classmethod
   def foForClientWithHostname(cClass,
     sbHostname,
-    *,
-    bCheckHostname = True,
-    bVerifyIntermediateCertificates = True
   ):
     fAssertTypes({
       "sbHostname": (sbHostname, bytes),
-      "bCheckHostname": (bCheckHostname, bool),
-      "bVerifyIntermediateCertificates": (bVerifyIntermediateCertificates, bool),
     });
     # Client side
-    oPythonSSLContext = ssl.create_default_context();
-    oPythonSSLContext.load_default_certs();
-    oPythonSSLContext.verify_mode = ssl.CERT_REQUIRED;
-    oPythonSSLContext.check_hostname = bCheckHostname;
-    if not bVerifyIntermediateCertificates:
-      oPythonSSLContext.verify_flags = ssl.VERIFY_X509_PARTIAL_CHAIN;
-    return cClass(sbHostname, oPythonSSLContext, bServerSide = False);
+    oPythonSSLContextWithCheckHostname = ssl.create_default_context();
+    oPythonSSLContextWithoutCheckHostname = ssl.create_default_context();
+    oPythonSSLContextWithCheckHostname.check_hostname = True;
+    oPythonSSLContextWithoutCheckHostname.check_hostname = False;
+    for oPythonSSLContext in (oPythonSSLContextWithCheckHostname, oPythonSSLContextWithoutCheckHostname):
+      oPythonSSLContext.load_default_certs();
+    return cClass(
+      sb0Hostname = sbHostname,
+      o0PythonSSLContextWithCheckHostname = oPythonSSLContextWithCheckHostname,
+      oPythonSSLContextWithoutCheckHostname = oPythonSSLContextWithoutCheckHostname,
+      bServerSide = False,
+    );
   
   @classmethod
   def foForClientWithoutVerification(cClass):
     # Client side
-    oPythonSSLContext = ssl._create_unverified_context();
+    oPythonSSLContextWithoutCheckHostname = ssl._create_unverified_context();
+    oPythonSSLContextWithoutCheckHostname.check_hostname = False;
     return cClass(
       sb0Hostname = None,
-      oPythonSSLContext = oPythonSSLContext,
+      o0PythonSSLContextWithCheckHostname = None,
+      oPythonSSLContextWithoutCheckHostname = oPythonSSLContextWithoutCheckHostname,
       bServerSide = False,
       bUnverified = True,
     );
   
   @ShowDebugOutput
   def __init__(oSelf,
-    sb0Hostname,
-    oPythonSSLContext,
     *,
+    sb0Hostname,
+    o0PythonSSLContextWithCheckHostname,
+    oPythonSSLContextWithoutCheckHostname,
     bServerSide = False,
     bUnverified = False,
   ):
@@ -127,16 +162,11 @@ class cSSLContext(object):
       "bUnverified": (bServerSide, bool),
     });
     oSelf.__sb0Hostname = sb0Hostname;
-    oSelf.__oPythonSSLContext = oPythonSSLContext;
+    oSelf.__o0PythonSSLContextWithCheckHostname = o0PythonSSLContextWithCheckHostname;
+    oSelf.__oPythonSSLContextWithoutCheckHostname = oPythonSSLContextWithoutCheckHostname;
     oSelf.__s0RootCertificateFilePath = None;
     oSelf.__bServerSide = bServerSide;
     oSelf.__bUnverified = bUnverified;
-  
-  @property
-  def oPythonSSLContext(oSelf):
-    # For use with "regular" Python code that doesn't accept cSSLContext instances.
-    # Please try to avoid using this, as it defeats the purpose of having this class.
-    return oSelf.__oPythonSSLContext;
   
   @property
   def bServerSide(oSelf):
@@ -159,17 +189,191 @@ class cSSLContext(object):
       "oCertificateAuthority": (oCertificateAuthority, cCertificateAuthority),
     });
     oSelf.__s0RootCertificateFilePath = oCertificateAuthority.fsGetRootCertificateFilePath();
-    oSelf.__oPythonSSLContext.load_verify_locations(oSelf.__s0RootCertificateFilePath);
+    if oSelf.__o0PythonSSLContextWithCheckHostname:
+      oSelf.__o0PythonSSLContextWithCheckHostname.load_verify_locations(oSelf.__s0RootCertificateFilePath);
+    oSelf.__oPythonSSLContextWithoutCheckHostname.load_verify_locations(oSelf.__s0RootCertificateFilePath);
   
-  from .cSSLContext_foWrapSocket import cSSLContext_foWrapSocket as foWrapSocket;
+  @ShowDebugOutput
+  def foWrapSocket(oSelf,
+    oPythonSocket,
+    *,
+    n0zTimeoutInSeconds = zNotProvided,
+    bzCheckHostname = zNotProvided,
+  ):
+    fAssertTypes({
+      "oPythonSocket": (oPythonSocket, socket.socket),
+      "n0zTimeoutInSeconds": (n0zTimeoutInSeconds, int, float, None, zNotProvided),
+      "bzCheckHostname": (bzCheckHostname, bool, zNotProvided),
+    });
+    n0TimeoutInSeconds = fxGetFirstProvidedValue(n0zTimeoutInSeconds, oSelf.n0DefaultSecureTimeoutInSeconds);
+    txRemoteAddress = oPythonSocket.getpeername();
+    dxDetails = {
+      "oSSLContext": oSelf,
+      "n0TimeoutInSeconds" : n0TimeoutInSeconds,
+      "sRemoteAddress": "%s:%d" % (txRemoteAddress[0], txRemoteAddress[1]),
+    };
+    if n0TimeoutInSeconds is not None and n0TimeoutInSeconds <= 0:
+      raise cSSLSecureTimeoutException(
+        "Timeout before socket could be secured.",
+        dxDetails = dxDetails,
+      );
+    n0EndTime = time.time() + n0TimeoutInSeconds if n0TimeoutInSeconds else None;
+    bCheckHostname = fxGetFirstProvidedValue(bzCheckHostname, not oSelf.bServerSide);
+    if bCheckHostname:
+      assert oSelf.__o0PythonSSLContextWithCheckHostname, \
+          "Cannot check hostname when using %s" % oSelf;
+      oPythonSSLContext = oSelf.__o0PythonSSLContextWithCheckHostname;
+    else:
+      oPythonSSLContext = oSelf.__oPythonSSLContextWithoutCheckHostname;
+    fShowDebugOutput("Wrapping socket%s..." % (" (timeout = %ss)" % n0TimeoutInSeconds if n0TimeoutInSeconds is not None else ""));
+    oPythonSocket.settimeout(n0TimeoutInSeconds);
+    try:
+      oPythonSSLSocket = oPythonSSLContext.wrap_socket(
+        sock = oPythonSocket,
+        server_side = oSelf.bServerSide,
+        server_hostname = None if oSelf.bServerSide else oSelf.sb0Hostname,
+        do_handshake_on_connect = False,
+      );
+    except ssl.SSLError as oException:
+      fShowDebugOutput("Exception while wrapping socket in SSL: %s" % repr(oException));
+      dxDetails["oException"] = oException;
+      raise cSSLWrapSocketException(
+        "Could not create secure socket.",
+        dxDetails = dxDetails,
+      );
+    if n0EndTime is not None and time.time() > n0EndTime:
+      raise cSSLSecureTimeoutException(
+        "Timeout before socket could be secured.",
+        dxDetails = dxDetails,
+      );
+    fShowDebugOutput("Performing handshake...");
+    try:
+      oPythonSSLSocket.do_handshake();
+    except (socket.timeout, TimeoutError):
+      raise cSSLSecureTimeoutException(
+        "Timeout before socket could be secured.",
+        dxDetails = dxDetails,
+      );
+    except ssl.SSLError as oException:
+      fShowDebugOutput("Exception while performing SSL handshake: %s" % repr(oException));
+      if gbDebugOutput:
+        print("==== EXCEPTION ====");
+        for sName in dir(oException):
+          if sName.startswith("__"): continue;
+          try:
+            xValue = getattr(oException, sName);
+          except:
+            continue;
+          print("%s: %s" % (sName, repr(xValue)));
+      try:
+        dxPeerCertificate = oPythonSSLSocket.getpeercert();
+      except ValueError:
+        pass;
+      else:
+        dxDetails["dxPeerCertificate"] = dxPeerCertificate;
+        if gbDebugOutput:
+          print("==== CERTIFICATE ====");
+          for sName in dir(dxPeerCertificate):
+            print("%s: %s" % (sName, repr(dxPeerCertificate[sName])));
+      if gbDebugOutput:
+        print("========");
+      if oException.args[1].find("ALERT_UNKNOWN_CA") != -1 or oException.args[1].find("invalid CA certificate") != -1:
+        raise cSSLUnknownCertificateAuthorityException(
+          "The remote host is using a certificate signed by an unknown Certificate Authority%s" % (
+            " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
+          ),
+          dxDetails = dxDetails,
+        );
+      elif oException.reason == "CERTIFICATE_VERIFY_FAILED":
+        if oException.verify_code == 3:
+          raise cSSLInvalidCertificateRevocationListNotAvailableException(
+            "The remote host provided a certificate with a revocation list that is not available%s" % (
+              " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
+            ),
+            dxDetails = dxDetails,
+          );
+        if oException.verify_code == 10:
+          raise cSSLInvalidCertificateExpiredException(
+            "The remote host provided a certificate that is expired%s" % (
+              " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
+            ),
+            dxDetails = dxDetails,
+          );
+        if oException.verify_code == 18:
+          raise cSSLInvalidSelfSignedCertificateException(
+            "The remote host provided a self-signed certificate%s" % (
+              " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
+            ),
+            dxDetails = dxDetails,
+          );
+        if oException.verify_code == 19:
+          raise cSSLInvalidSelfSignedCertificateInChainException(
+            "The remote host provided a self-signed certificate in the certificate chain%s" % (
+              " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
+            ),
+            dxDetails = dxDetails,
+          );
+        if oException.verify_code == 20:
+          raise cSSLInvaliCertificateChainException(
+            "The remote host provided a certificate with an invalid certificate chain%s" % (
+              " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
+            ),
+            dxDetails = dxDetails,
+          );
+        if oException.verify_code == 62:
+          raise cSSLInvalidHostnameForCertificateException(
+            "The remote host provided a certificate that is not valid%s" % (
+              " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
+            ),
+            dxDetails = dxDetails,
+          );
+        raise cSSLInvalidCertificateException(
+          "The remote host provided an invalid certificate",
+          dxDetails = dxDetails,
+        );
+      dxDetails["oException"] = oException;
+      raise cSSLSecureHandshakeException(
+        "Could not perform SSL handshake.",
+        dxDetails = dxDetails,
+      );
+    if bCheckHostname:
+      fShowDebugOutput("Checking domain name...");
+      try:
+        oRemoteCertificate = oPythonSSLSocket.getpeercert();
+      except ssl.SSLError as oException:
+        fShowDebugOutput("Exception while getting remote certificate: %s" % repr(oException));
+        dxDetails["oException"] = oException;
+        raise cSSLCannotGetRemoteCertificateException(
+          "Could not get remote certificate.",
+          dxDetails = dxDetails,
+        );
+      assert oRemoteCertificate, \
+          "No certificate!?";
+      if n0EndTime is not None and time.time() > n0EndTime:
+        raise cSSLSecureTimeoutException(
+          "Timeout before socket could be secured.",
+          dxDetails = dxDetails,
+        );
+      try:
+        ssl.match_hostname(oRemoteCertificate, str(oSelf.sb0Hostname, "ascii", "strict"));
+      except ssl.CertificateError as oException:
+        fShowDebugOutput("Exception while matching hostname: %s" % repr(oException));
+        dxDetails["oException"] = oException;
+        raise cSSLIncorrectHostnameException(
+          "The server reported an incorrect domain name for the secure connection",
+          dxDetails = dxDetails,
+        );
+    fShowDebugOutput("Connection secured.");
+    return oPythonSSLSocket;
   
   def fasGetDetails(oSelf):
     # This is done without a property lock, so race-conditions exist and it
     # approximates the real values.
+    adxPythonCertificateInformation  = oSelf.__oPythonSSLContextWithoutCheckHostname.get_ca_certs();
     if oSelf.__bServerSide:
       asCertificates = [];
       s0Hostname = None;
-      for dxPythonCertificateInformation in oSelf.__oPythonSSLContext.get_ca_certs():
+      for dxPythonCertificateInformation in adxPythonCertificateInformation:
         s0OrganizationName = None;
         s0CommonName = None;
         ttsSubjectData = dxPythonCertificateInformation["subject"];
@@ -203,11 +407,10 @@ class cSSLContext(object):
       else:
         sNotes = "no certificate chain";
     else:
-      sNotes = "%d certificate authorities" % len(oSelf.__oPythonSSLContext.get_ca_certs());
+      sNotes = "%d certificate authorities" % len(adxPythonCertificateInformation);
     return [s for s in [
       ("hostname=%s" % str(oSelf.__sb0Hostname, "utf-8", "strict")) if oSelf.__sb0Hostname else "NO HOSTNAME",
       "%s side" % ("server" if oSelf.__bServerSide else "client"),
-      "checks domain name" if oSelf.__oPythonSSLContext.check_hostname else "DOES NOT CHECK DOMAIN NAME",
       "UNVERIFIED" if oSelf.__bUnverified else None,
       "root certificate file=%s" % oSelf.__s0RootCertificateFilePath if oSelf.__s0RootCertificateFilePath is not None else None,
       sNotes,
