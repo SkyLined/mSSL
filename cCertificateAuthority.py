@@ -30,12 +30,12 @@ guCertificateValidityInDays = 28876;
 gsMainFolderPath = os.path.dirname(__file__);
 gsOpenSSLFolderPath = os.path.join(gsMainFolderPath, "OpenSSL");
 assert os.path.isdir(gsOpenSSLFolderPath), \
-    "Cannot find OpenSSL folder %s; please download OpenSSL.exe into this folder." % sOpenSSLFolderPath;
+    "Cannot find OpenSSL folder %s; please download OpenSSL.exe into this folder." % gsOpenSSLFolderPath;
 gsOSISA = "x64" if sys.maxsize > 2**32 else "x86";
 gsOpenSSLBinaryFolderPath = os.path.join(gsOpenSSLFolderPath, gsOSISA, "bin");
 gsOpenSSLBinaryPath = os.path.join(gsOpenSSLBinaryFolderPath, "OpenSSL.exe");
 assert os.path.isfile(gsOpenSSLBinaryPath), \
-    "Cannot find OpenSSL binary %s; please download OpenSSL.exe into this folder." % sOpenSSLBinaryPath;
+    "Cannot find OpenSSL binary %s; please download OpenSSL.exe into this folder." % gsOpenSSLBinaryPath;
 
 def fExecuteOpenSSL(*tsArguments):
   asCommandLine = [gsOpenSSLBinaryPath] + list(tsArguments);
@@ -173,7 +173,7 @@ class cCertificateAuthority(object):
         str(guKeySize),
       );
       assert os.path.isfile(sCAPrivateKeyFilePath), \
-          "OpenSSL failed to generate CA private key file %s!" % repr(sRootPrivateKeyFilePath);
+          "OpenSSL failed to generate CA private key file %s!" % repr(sCAPrivateKeyFilePath);
     
     sCACertificateFilePath = os.path.join(oSelf.__sBaseFolderPath, "%s CA certificate.pem" % oSelf.__sAuthorityName);
     if not os.path.isfile(sCACertificateFilePath):
