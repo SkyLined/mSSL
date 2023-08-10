@@ -27,7 +27,7 @@ from .mExceptions import \
     cSSLUnknownCertificateAuthorityException, \
     cSSLWrapSocketException;
 
-gbDebugOutput = True;
+gbDebugOutput = False;
 
 class cSSLContext(object):
   n0DefaultSecureTimeoutInSeconds = 5;
