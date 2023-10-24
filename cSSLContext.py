@@ -249,6 +249,16 @@ class cSSLContext(object):
     fShowDebugOutput("Performing handshake...");
     try:
       oPythonSSLSocket.do_handshake();
+    except ssl.CertificateError as oException:
+      # We may need to check oException.verify_code to find out what caused the error
+      # because this exception may cover other issues besides incorrect hostnames.
+      # This has not been tested!
+      fShowDebugOutput("Certificate exception while performing SSL handshake: %s" % repr(oException));
+      dxDetails["oException"] = oException;
+      raise cSSLIncorrectHostnameException(
+        "The server reported an incorrect domain name for the secure connection",
+        dxDetails = dxDetails,
+      );
     except (socket.timeout, TimeoutError):
       raise cSSLSecureTimeoutException(
         "Timeout before socket could be secured.",
@@ -336,33 +346,6 @@ class cSSLContext(object):
         "Could not perform SSL handshake.",
         dxDetails = dxDetails,
       );
-    if bCheckHostname:
-      fShowDebugOutput("Checking domain name...");
-      try:
-        oRemoteCertificate = oPythonSSLSocket.getpeercert();
-      except ssl.SSLError as oException:
-        fShowDebugOutput("Exception while getting remote certificate: %s" % repr(oException));
-        dxDetails["oException"] = oException;
-        raise cSSLCannotGetRemoteCertificateException(
-          "Could not get remote certificate.",
-          dxDetails = dxDetails,
-        );
-      assert oRemoteCertificate, \
-          "No certificate!?";
-      if n0EndTime is not None and time.time() > n0EndTime:
-        raise cSSLSecureTimeoutException(
-          "Timeout before socket could be secured.",
-          dxDetails = dxDetails,
-        );
-      try:
-        ssl.match_hostname(oRemoteCertificate, str(oSelf.sb0Hostname, "ascii", "strict"));
-      except ssl.CertificateError as oException:
-        fShowDebugOutput("Exception while matching hostname: %s" % repr(oException));
-        dxDetails["oException"] = oException;
-        raise cSSLIncorrectHostnameException(
-          "The server reported an incorrect domain name for the secure connection",
-          dxDetails = dxDetails,
-        );
     fShowDebugOutput("Connection secured.");
     return oPythonSSLSocket;
   
