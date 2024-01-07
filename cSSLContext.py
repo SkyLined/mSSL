@@ -253,7 +253,7 @@ class cSSLContext(object):
       # This has not been tested!
       fShowDebugOutput("Certificate exception while performing SSL handshake: %s" % repr(oException));
       dxDetails["oException"] = oException;
-      raise cSSLIncorrectHostnameException(
+      raise cSSLInvalidHostnameForCertificateException(
         "The server reported an incorrect domain name for the secure connection",
         dxDetails = dxDetails,
       );
@@ -312,7 +312,7 @@ class cSSLContext(object):
             dxDetails = dxDetails,
           );
         if oException.verify_code == 20:
-          raise cSSLInvaliCertificateChainException(
+          raise cSSLInvalidCertificateChainException(
             "The remote host provided a certificate with an invalid certificate chain%s" % (
               " for %s" % repr(oSelf.sb0Hostname)[1:] if oSelf.sb0Hostname else "",
             ),
