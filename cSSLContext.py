@@ -13,9 +13,7 @@ from mNotProvided import \
     fxGetFirstProvidedValue, \
     zNotProvided;
 from .mExceptions import \
-    cSSLCannotGetRemoteCertificateException, \
-    cSSLIncorrectHostnameException, \
-    cSSLInvaliCertificateChainException, \
+    cSSLInvalidCertificateChainException, \
     cSSLInvalidCertificateException, \
     cSSLInvalidCertificateExpiredException, \
     cSSLInvalidCertificateRevocationListNotAvailableException, \
@@ -275,16 +273,6 @@ class cSSLContext(object):
           except:
             continue;
           print("%s: %s" % (sName, repr(xValue)));
-      try:
-        dxPeerCertificate = oPythonSSLSocket.getpeercert();
-      except ValueError:
-        pass;
-      else:
-        dxDetails["dxPeerCertificate"] = dxPeerCertificate;
-        if gbDebugOutput:
-          print("==== CERTIFICATE ====");
-          for sName in dir(dxPeerCertificate):
-            print("%s: %s" % (sName, repr(dxPeerCertificate[sName])));
       if gbDebugOutput:
         print("========");
       if oException.args[1].find("ALERT_UNKNOWN_CA") != -1 or oException.args[1].find("invalid CA certificate") != -1:
@@ -346,6 +334,18 @@ class cSSLContext(object):
         "Could not perform SSL handshake.",
         dxDetails = dxDetails,
       );
+    finally:
+      # For all excptions, try to get the peer certificate for context:
+      try:
+        dxPeerCertificate = oPythonSSLSocket.getpeercert();
+      except ValueError:
+        pass;
+      else:
+        dxDetails["dxPeerCertificate"] = dxPeerCertificate;
+        if gbDebugOutput:
+          print("==== CERTIFICATE ====");
+          for sName in dir(dxPeerCertificate):
+            print("%s: %s" % (sName, repr(dxPeerCertificate[sName])));
     fShowDebugOutput("Connection secured.");
     return oPythonSSLSocket;
   

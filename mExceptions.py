@@ -28,7 +28,7 @@ class cSSLIncompleteCertificateChainException(cSSLException):
 class cSSLInvalidCertificateException(cSSLException):
   pass; # The provided certificate is invalid (no further details about the reason for this unfortunately)
 
-class cSSLInvaliCertificateChainException(cSSLInvalidCertificateException):
+class cSSLInvalidCertificateChainException(cSSLInvalidCertificateException):
   pass; # The provided certificate is invalid because it does not have a complete trust-chain.
 class cSSLInvalidCertificateExpiredException(cSSLInvalidCertificateException):
   pass; # The provided certificate is invalid because it has expired.
@@ -49,9 +49,6 @@ class cSSLSecureHandshakeException(cSSLException):
 class cSSLCannotGetRemoteCertificateException(cSSLException):
   pass; # Cannot get the remote certificate
 
-class cSSLIncorrectHostnameException(cSSLException):
-  pass; # The remote certificate is for an incorrect hostname.
-
 acExceptions = [
   cSSLException,
   cSSLSecureTimeoutException,
@@ -59,7 +56,7 @@ acExceptions = [
   cSSLUnknownCertificateAuthorityException,
   cSSLIncompleteCertificateChainException,
   cSSLInvalidCertificateException,
-  cSSLInvaliCertificateChainException,
+  cSSLInvalidCertificateChainException,
   cSSLInvalidCertificateExpiredException,
   cSSLInvalidCertificateRevocationListException,
   cSSLInvalidCertificateRevocationListNotAvailableException,
@@ -68,5 +65,4 @@ acExceptions = [
   cSSLInvalidSelfSignedCertificateInChainException,
   cSSLSecureHandshakeException,
   cSSLCannotGetRemoteCertificateException,
-  cSSLIncorrectHostnameException,
 ];
