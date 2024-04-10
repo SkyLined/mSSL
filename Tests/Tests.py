@@ -58,8 +58,8 @@ try:
   assert not bQuick or not bFull, \
       "Cannot test both quick and full!";
   
-  sbTestHostname = b"test.domain.name";
-  sTestHostname = str(sbTestHostname, "ascii", "strict");
+  sbTestHost = b"test.domain.name";
+  sTestHost = str(sbTestHost, "ascii", "strict");
   HEADER = 0xFF0A;
   DELETE_FILE = 0xFF0C;
   DELETE_FOLDER = 0xFF04;
@@ -86,13 +86,13 @@ try:
       oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Delete Certificate Authority folder... ", sPadding = "\u2500");
       oCertificateAuthority.fDeleteCacheFolder(fShowDeleteOrOverwriteFileOrFolder);
   
-  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority for cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
-  o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHostname(sbTestHostname);
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority for cSSLContext for '", sTestHost, "'...", sPadding = "\u2500");
+  o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHost(sbTestHost);
   assert o0SSLContext is None, \
       "Expected None, got %s" % repr(o0SSLContext);
   
-  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority to generate cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
-  oSSLContext = oCertificateAuthority.foGenerateServersideSSLContextForHostname(sbTestHostname);
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority to generate cSSLContext for '", sTestHost, "'...", sPadding = "\u2500");
+  oSSLContext = oCertificateAuthority.foGenerateServersideSSLContextForHost(sbTestHost);
   oConsole.fOutput("  oSSLContext = ", str(oSSLContext));
   
   oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Resetting oCertificateAuthority... ", sPadding = "\u2500");
@@ -100,13 +100,13 @@ try:
   oCertificateAuthority.fResetCacheFolder(fShowDeleteOrOverwriteFileOrFolder);
   oConsole.fOutput("  oCertificateAuthority = ", str(oCertificateAuthority));
   
-  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority for cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
-  o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHostname(sbTestHostname);
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority for cSSLContext for '", sTestHost, "'...", sPadding = "\u2500");
+  o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHost(sbTestHost);
   assert o0SSLContext is None, \
       "Expected None, go %s" % repr(o0SSLContext);
   
-  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority to generate cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
-  oSSLContext = oCertificateAuthority.foGenerateServersideSSLContextForHostname(sbTestHostname);
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateAuthority to generate cSSLContext for '", sTestHost, "'...", sPadding = "\u2500");
+  oSSLContext = oCertificateAuthority.foGenerateServersideSSLContextForHost(sbTestHost);
   oConsole.fOutput("  oSSLContext = ", str(oSSLContext));
   
   oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Generate cCertificateStore instance...", sPadding = "\u2500");
@@ -115,8 +115,8 @@ try:
   oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Add oCertificateAuthority to oCertificateStore...", sPadding = "\u2500");
   oCertificateStore.fAddCertificateAuthority(oCertificateAuthority);
   
-  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateStore for cSSLContext for '", sTestHostname, "'...", sPadding = "\u2500");
-  oSSLContext = oCertificateStore.foGetServersideSSLContextForHostname(sbTestHostname);
+  oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Ask oCertificateStore for cSSLContext for '", sTestHost, "'...", sPadding = "\u2500");
+  oSSLContext = oCertificateStore.foGetServersideSSLContextForHost(sbTestHost);
   
   if not bQuick:
     oConsole.fOutput(HEADER, "\u2500\u2500\u2500\u2500 Delete Certificate Authority folder... ", sPadding = "\u2500");

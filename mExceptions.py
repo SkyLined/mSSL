@@ -36,8 +36,8 @@ class cSSLInvalidCertificateRevocationListException(cSSLInvalidCertificateExcept
   pass; # The provided certificate is invalid because it has an invalid certificate revocation list.
 class cSSLInvalidCertificateRevocationListNotAvailableException(cSSLInvalidCertificateRevocationListException):
   pass; # The provided certificate is invalid because it's certificate revocation list is not available.
-class cSSLInvalidHostnameForCertificateException(cSSLInvalidCertificateException):
-  pass; # The provided certificate is invalid because it does not apply to the remote hostname used in the connection
+class cSSLInvalidHostForCertificateException(cSSLInvalidCertificateException):
+  pass; # The provided certificate is invalid because it does not apply to the remote Host used in the connection
 class cSSLInvalidSelfSignedCertificateException(cSSLInvalidCertificateException):
   pass; # The provided certificate is invalid because it is self-signed.
 class cSSLInvalidSelfSignedCertificateInChainException(cSSLInvalidSelfSignedCertificateException):
@@ -60,7 +60,7 @@ acExceptions = [
   cSSLInvalidCertificateExpiredException,
   cSSLInvalidCertificateRevocationListException,
   cSSLInvalidCertificateRevocationListNotAvailableException,
-  cSSLInvalidHostnameForCertificateException,
+  cSSLInvalidHostForCertificateException,
   cSSLInvalidSelfSignedCertificateException,
   cSSLInvalidSelfSignedCertificateInChainException,
   cSSLSecureHandshakeException,

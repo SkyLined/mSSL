@@ -103,14 +103,14 @@ class cCertificateAuthority(object):
     
     oSelf.__oCacheLock = cLock("%s.__oCacheLock" % oSelf.__class__.__name__,
         n0DeadlockTimeoutInSeconds = gnDeadlockTimeoutInSeconds);
-    oSelf.__do0CachedSSLContext_by_sbHostname = {};
+    oSelf.__do0CachedSSLContext_by_sbHost = {};
   
   def fDeleteCacheFolder(oSelf, f0Callback = None): # fCallback(sFilePath, bIsFile, s0Content);
     oSelf.__oCacheLock.fAcquire();
     try:
       # Delete all files
       fDeleteFolderContents(oSelf.__sBaseFolderPath, f0Callback, bDeleteFolder = False);
-      oSelf.__do0CachedSSLContext_by_sbHostname = {};
+      oSelf.__do0CachedSSLContext_by_sbHost = {};
     finally:
       oSelf.__oCacheLock.fRelease();
   
@@ -136,7 +136,7 @@ class cCertificateAuthority(object):
         sDatabaseFilePath = os.path.join(sDatabaseFolderPath, sDatabaseFileName);
         if f0Callback: f0Callback(sDatabaseFilePath, True, sContent);
         fWriteFile(sDatabaseFilePath, sContent);
-      oSelf.__do0CachedSSLContext_by_sbHostname = {};
+      oSelf.__do0CachedSSLContext_by_sbHost = {};
     finally:
       oSelf.__oCacheLock.fRelease();
   
@@ -193,63 +193,63 @@ class cCertificateAuthority(object):
     return (sCAPrivateKeyFilePath, sCACertificateFilePath);
   
   @ShowDebugOutput
-  def fo0GetClientSSLContextForHostname(oSelf, sbHostname):
-    fAssertType("sbHostname", sbHostname, bytes);
+  def fo0GetClientSSLContextForHost(oSelf, sbHost):
+    fAssertType("sbHost", sbHost, bytes);
     # Only return a client-side context if this Certificate Authority has a server-side context.
-    if not oSelf.fo0GetServersideSSLContextForHostname(sbHostname):
+    if not oSelf.fo0GetServersideSSLContextForHost(sbHost):
       return None;
-    oSSLContext = cSSLContext.foForClientWithHostname(sbHostname);
+    oSSLContext = cSSLContext.foForClientWithHost(sbHost);
     oSSLContext.fAddCertificateAuthority(oSelf);
     return oSSLContext;
   
   @ShowDebugOutput
-  def fo0GetServersideSSLContextForHostname(oSelf, sbHostname):
-    fAssertType("sbHostname", sbHostname, bytes);
+  def fo0GetServersideSSLContextForHost(oSelf, sbHost):
+    fAssertType("sbHost", sbHost, bytes);
     oSelf.__oCacheLock.fAcquire();
     try:
-      if sbHostname in oSelf.__do0CachedSSLContext_by_sbHostname:
-        return oSelf.__do0CachedSSLContext_by_sbHostname[sbHostname];
-      fShowDebugOutput("Loading context for %s from file..." % sbHostname);
+      if sbHost in oSelf.__do0CachedSSLContext_by_sbHost:
+        return oSelf.__do0CachedSSLContext_by_sbHost[sbHost];
+      fShowDebugOutput("Loading context for %s from file..." % sbHost);
       goCertificateFilesLock.fAcquire();
       try:
         sCertificatesCacheFolderPath = oSelf.__fsGetCertificateCacheFolderPath();
-        sKeyFilePath = os.path.join(sCertificatesCacheFolderPath, "%s private key.pem" % str(sbHostname, "ascii", "strict"));
+        sKeyFilePath = os.path.join(sCertificatesCacheFolderPath, "%s private key.pem" % str(sbHost, "ascii", "strict"));
         if not os.path.isfile(sKeyFilePath):
           fShowDebugOutput("Key file not found at %s." % sKeyFilePath);
-          oSelf.__do0CachedSSLContext_by_sbHostname[sbHostname] = None;
+          oSelf.__do0CachedSSLContext_by_sbHost[sbHost] = None;
           return None;
-        sCertificateFilePath = os.path.join(sCertificatesCacheFolderPath, "%s certificate.pem" % str(sbHostname, "ascii", "strict"));
+        sCertificateFilePath = os.path.join(sCertificatesCacheFolderPath, "%s certificate.pem" % str(sbHost, "ascii", "strict"));
         if os.path.isfile(sCertificateFilePath):
           fShowDebugOutput("Certificate file not found at %s." % sCertificateFilePath);
-          oSelf.__do0CachedSSLContext_by_sbHostname[sbHostname] = None;
+          oSelf.__do0CachedSSLContext_by_sbHost[sbHost] = None;
           return None;
       finally:
         goCertificateFilesLock.fRelease();
-      oSSLContext = cSSLContext.foForServerWithHostnameAndKeyAndCertificateFilePath(
-        sbHostname, sKeyFilePath, sCertificateFilePath
+      oSSLContext = cSSLContext.foForServerWithHostAndKeyAndCertificateFilePath(
+        sbHost, sKeyFilePath, sCertificateFilePath
       );
-      oSelf.__do0CachedSSLContext_by_sbHostname[sbHostname] = oSSLContext;
+      oSelf.__do0CachedSSLContext_by_sbHost[sbHost] = oSSLContext;
       return oSSLContext;
     finally:
       oSelf.__oCacheLock.fRelease();
   
   @ShowDebugOutput
-  def foGenerateServersideSSLContextForHostname(oSelf, sbHostname):
-    fAssertType("sbHostname", sbHostname, bytes);
-    sHostname = str(sbHostname, "ascii", "strict")
+  def foGenerateServersideSSLContextForHost(oSelf, sbHost):
+    fAssertType("sbHost", sbHost, bytes);
+    sHost = str(sbHost, "ascii", "strict");
     oSelf.__oCacheLock.fAcquire();
     try:
-      o0SSLContext = oSelf.__do0CachedSSLContext_by_sbHostname.get(sbHostname);
+      o0SSLContext = oSelf.__do0CachedSSLContext_by_sbHost.get(sbHost);
       if o0SSLContext:
         return o0SSLContext;
       
       goCertificateFilesLock.fAcquire();
       try:
         sCertificatesCacheFolderPath = oSelf.__fsCreateCertificatesCacheFolderIfNeededAndReturnPath();
-        sCertificateFilePath = os.path.join(sCertificatesCacheFolderPath, "%s certificate.crt" % sHostname);
-        sPrivateKeyFilePath = os.path.join(sCertificatesCacheFolderPath, "%s private key.key" % sHostname);
+        sCertificateFilePath = os.path.join(sCertificatesCacheFolderPath, "%s certificate.crt" % sHost);
+        sPrivateKeyFilePath = os.path.join(sCertificatesCacheFolderPath, "%s private key.key" % sHost);
         if not os.path.isfile(sCertificateFilePath) or not os.path.isfile(sPrivateKeyFilePath):
-          sCertificateSigningRequestFilePath = os.path.join(sCertificatesCacheFolderPath, "%s certificate signing request.crt" % sHostname);
+          sCertificateSigningRequestFilePath = os.path.join(sCertificatesCacheFolderPath, "%s certificate signing request.crt" % sHost);
           if not os.path.isfile(sCertificateSigningRequestFilePath) or not os.path.isfile(sPrivateKeyFilePath):
             fExecuteOpenSSL(
               "req",
@@ -258,7 +258,7 @@ class cCertificateAuthority(object):
               "-nodes",
               "-newkey", "rsa:%d" % guKeySize,
               "-keyout", sPrivateKeyFilePath,
-              "-subj", "/CN=%s" % sHostname,
+              "-subj", "/CN=%s" % sHost,
               "-out", sCertificateSigningRequestFilePath,
               "-config", oSelf.__fsCreateCAConfigFileIfNeededAndReturnPath(),
             );
@@ -268,9 +268,9 @@ class cCertificateAuthority(object):
                 "OpenSSL failed to generate certificate signing request file %s!" % repr(sCertificateSigningRequestFilePath);
           (sCAPrivateKeyFilePath, sCACertificateFilePath) = oSelf.__ftsCreateCAPrivateKeyAndCertificateFilesIfNeededAndReturnPaths()
           sExtensionFilePath = fsCreateFileIfNeededAndReturnPath(
-            os.path.join(sCertificatesCacheFolderPath, "%s extension.ext" % sHostname),
+            os.path.join(sCertificatesCacheFolderPath, "%s extension.ext" % sHost),
             gsExtensionFileTemplate % {
-              "sHostname": sHostname,
+              "sHost": sHost,
             }
           );
           fExecuteOpenSSL(
@@ -290,10 +290,10 @@ class cCertificateAuthority(object):
       finally:
         goCertificateFilesLock.fRelease();
       fShowDebugOutput("Loading context from file...");
-      oSSLContext = cSSLContext.foForServerWithHostnameAndKeyAndCertificateFilePath(
-        sbHostname, sPrivateKeyFilePath, sCertificateFilePath
+      oSSLContext = cSSLContext.foForServerWithHostAndKeyAndCertificateFilePath(
+        sbHost, sPrivateKeyFilePath, sCertificateFilePath
       );
-      oSelf.__do0CachedSSLContext_by_sbHostname[sbHostname] = oSSLContext;
+      oSelf.__do0CachedSSLContext_by_sbHost[sbHost] = oSSLContext;
       return oSSLContext;
     finally:
       oSelf.__oCacheLock.fRelease();
@@ -302,7 +302,7 @@ class cCertificateAuthority(object):
     return [
       "name=%s" % repr(oSelf.__sAuthorityName),
       "folder=%s" % repr(oSelf.__sBaseFolderPath),
-      "%d cached contexts" % len(oSelf.__do0CachedSSLContext_by_sbHostname),
+      "%d cached contexts" % len(oSelf.__do0CachedSSLContext_by_sbHost),
     ];
   
   def __repr__(oSelf):

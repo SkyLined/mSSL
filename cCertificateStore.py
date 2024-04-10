@@ -16,64 +16,64 @@ class cCertificateStore(object):
   @ShowDebugOutput
   def __init__(oSelf):
     oSelf.__aoCertificateAuthorities = [];
-    oSelf.__dsCertificateFilePath_by_sbHostname = {};
-    oSelf.__dsPrivateKeyFilePath_by_sbHostname = {};
-    oSelf.__doSSLContextForClient_by_sbHostname = {};
-    oSelf.__doSSLContextForServer_by_sbHostname = {};
+    oSelf.__dsCertificateFilePath_by_sbHost = {};
+    oSelf.__dsPrivateKeyFilePath_by_sbHost = {};
+    oSelf.__doSSLContextForClient_by_sbHost = {};
+    oSelf.__doSSLContextForServer_by_sbHost = {};
   
   @ShowDebugOutput
   def fAddCertificateAuthority(oSelf, oCertificateAuthority):
     assert (
-      not oSelf.__doSSLContextForClient_by_sbHostname
-      and not oSelf.__doSSLContextForServer_by_sbHostname
+      not oSelf.__doSSLContextForClient_by_sbHost
+      and not oSelf.__doSSLContextForServer_by_sbHost
     ), \
         "Cannot add CAs after creating SSLContexts";
     oSelf.__aoCertificateAuthorities.append(oCertificateAuthority);
   
   @ShowDebugOutput
-  def fAddCertificateFilePathForHostname(oSelf, sbHostname, sCertificateFilePath):
-    fAssertType("sbHostname", sbHostname, bytes);
+  def fAddCertificateFilePathForHost(oSelf, sbHost, sCertificateFilePath):
+    fAssertType("sbHost", sbHost, bytes);
     fAssertType("sCertificateFilePath", sCertificateFilePath, str);
-    oSelf.__dsCertificateFilePath_by_sbHostname[sbHostname] = sCertificateFilePath;
+    oSelf.__dsCertificateFilePath_by_sbHost[sbHost] = sCertificateFilePath;
   
   @ShowDebugOutput
-  def fAddCertificateAndKeyFilePathsForHostname(oSelf, sbHostname, sCertificateFilePath, sKeyFilePath):
-    fAssertType("sbHostname", sbHostname, bytes);
+  def fAddCertificateAndKeyFilePathsForHost(oSelf, sbHost, sCertificateFilePath, sKeyFilePath):
+    fAssertType("sbHost", sbHost, bytes);
     fAssertType("sCertificateFilePath", sCertificateFilePath, str);
     fAssertType("sKeyFilePath", sKeyFilePath, str);
-    oSelf.__dsCertificateFilePath_by_sbHostname[sbHostname] = sCertificateFilePath;
-    oSelf.__dsPrivateKeyFilePath_by_sbHostname[sbHostname] = sKeyFilePath;
+    oSelf.__dsCertificateFilePath_by_sbHost[sbHost] = sCertificateFilePath;
+    oSelf.__dsPrivateKeyFilePath_by_sbHost[sbHost] = sKeyFilePath;
   
   @ShowDebugOutput
-  def foAddSSLContextForServerWithHostname(oSelf, oSSLContext, sbHostname):
-    fAssertType("sbHostname", sbHostname, bytes);
-    assert sbHostname not in oSelf.__doSSLContextForServer_by_sbHostname, \
-        "Cannot add two SSL contexts for the same domain name (%s)" % sbHostname;
-    oSelf.__doSSLContextForServer_by_sbHostname[sbHostname] = oSSLContext;
+  def foAddSSLContextForServerWithHost(oSelf, oSSLContext, sbHost):
+    fAssertType("sbHost", sbHost, bytes);
+    assert sbHost not in oSelf.__doSSLContextForServer_by_sbHost, \
+        "Cannot add two SSL contexts for the same host (%s)" % sbHost;
+    oSelf.__doSSLContextForServer_by_sbHost[sbHost] = oSSLContext;
   
   @ShowDebugOutput
-  def foGetServersideSSLContextForHostname(oSelf, sbHostname):
-    fAssertType("sbHostname", sbHostname, bytes);
-    o0SSLContext = oSelf.__doSSLContextForServer_by_sbHostname.get(sbHostname);
+  def foGetServersideSSLContextForHost(oSelf, sbHost):
+    fAssertType("sbHost", sbHost, bytes);
+    o0SSLContext = oSelf.__doSSLContextForServer_by_sbHost.get(sbHost);
     if o0SSLContext is not None:
       oSSLContext = o0SSLContext;
     else:
-      sCertificateFilePath = oSelf.__dsCertificateFilePath_by_sbHostname.get(sbHostname);
+      sCertificateFilePath = oSelf.__dsCertificateFilePath_by_sbHost.get(sbHost);
       if sCertificateFilePath:
-        sKeyFilePath = oSelf.__dsPrivateKeyFilePath_by_sbHostname.get(sbHostname);
+        sKeyFilePath = oSelf.__dsPrivateKeyFilePath_by_sbHost.get(sbHost);
         if sKeyFilePath:
-          oSSLContext = cSSLContext.foForServerWithHostnameAndKeyAndCertificateFilePath(sbHostname, sKeyFilePath, sCertificateFilePath);
+          oSSLContext = cSSLContext.foForServerWithHostAndKeyAndCertificateFilePath(sbHost, sKeyFilePath, sCertificateFilePath);
         else:
-          oSSLContext = cSSLContext.foForServerWithHostnameAndCertificateFilePath(sbHostname, sCertificateFilePath);
+          oSSLContext = cSSLContext.foForServerWithHostAndCertificateFilePath(sbHost, sCertificateFilePath);
       else:
         for oCertificateAuthority in oSelf.__aoCertificateAuthorities:
-          o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHostname(sbHostname);
+          o0SSLContext = oCertificateAuthority.fo0GetServersideSSLContextForHost(sbHost);
           if o0SSLContext is not None:
             oSSLContext = o0SSLContext;
             break;
         else:
-          raise AssertionError("No certificate exists for domain %s; please create one using a cCertificateAuthority instance." % sbHostname);
-      oSelf.__doSSLContextForServer_by_sbHostname[sbHostname] = oSSLContext;
+          raise AssertionError("No certificate exists for host %s; please create one using a cCertificateAuthority instance." % sbHost);
+      oSelf.__doSSLContextForServer_by_sbHost[sbHost] = oSSLContext;
       for oCertificateAuthority in oSelf.__aoCertificateAuthorities:
         oSSLContext.fAddCertificateAuthority(oCertificateAuthority);
     return oSSLContext;
@@ -85,23 +85,23 @@ class cCertificateStore(object):
     return oSelf.__o0SSLContextForClientWithoutVerification;
     
   @ShowDebugOutput
-  def foGetClientsideSSLContextForHostname(oSelf,
-    sbHostname,
+  def foGetClientsideSSLContextForHost(oSelf,
+    sbHost,
   ):
-    fAssertType("sbHostname", sbHostname, bytes);
-    oSSLContext = oSelf.__doSSLContextForClient_by_sbHostname.get(sbHostname);
+    fAssertType("sbHost", sbHost, bytes);
+    oSSLContext = oSelf.__doSSLContextForClient_by_sbHost.get(sbHost);
     if not oSSLContext:
-      sCertificateFilePath = oSelf.__dsCertificateFilePath_by_sbHostname.get(sbHostname);
+      sCertificateFilePath = oSelf.__dsCertificateFilePath_by_sbHost.get(sbHost);
       if sCertificateFilePath:
-        oSSLContext = cSSLContext.foForClientWithHostnameAndCertificateFilePath(
-          sbHostname,
+        oSSLContext = cSSLContext.foForClientWithHostAndCertificateFilePath(
+          sbHost,
           sCertificateFilePath,
         );
       else:
-        oSSLContext = cSSLContext.foForClientWithHostname(
-          sbHostname,
+        oSSLContext = cSSLContext.foForClientWithHost(
+          sbHost,
         );
-      oSelf.__doSSLContextForClient_by_sbHostname[sbHostname] = oSSLContext;
+      oSelf.__doSSLContextForClient_by_sbHost[sbHost] = oSSLContext;
       for oCertificateAuthority in oSelf.__aoCertificateAuthorities:
         oSSLContext.fAddCertificateAuthority(oCertificateAuthority);
     return oSSLContext;
@@ -109,10 +109,10 @@ class cCertificateStore(object):
   def fasGetDetails(oSelf):
     return [
       "%d CAs" % len(oSelf.__aoCertificateAuthorities),
-      "%d certs" % len(oSelf.__dsCertificateFilePath_by_sbHostname),
-      "%d keys" % len(oSelf.__dsPrivateKeyFilePath_by_sbHostname),
-      "%d client contexts" % len(oSelf.__doSSLContextForClient_by_sbHostname),
-      "%d server contexts" % len(oSelf.__doSSLContextForServer_by_sbHostname),
+      "%d certs" % len(oSelf.__dsCertificateFilePath_by_sbHost),
+      "%d keys" % len(oSelf.__dsPrivateKeyFilePath_by_sbHost),
+      "%d client contexts" % len(oSelf.__doSSLContextForClient_by_sbHost),
+      "%d server contexts" % len(oSelf.__doSSLContextForServer_by_sbHost),
     ];
   
   def __repr__(oSelf):

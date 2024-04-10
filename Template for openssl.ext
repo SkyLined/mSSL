@@ -4,4 +4,4 @@ keyUsage                = digitalSignature, nonRepudiation, keyEncipherment, dat
 subjectAltName          = @subjectAltName
 
 [subjectAltName]
-DNS.1                   = '%(sHostname)s'
+DNS.1                   = '%(sHost)s'
